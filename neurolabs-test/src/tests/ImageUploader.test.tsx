@@ -63,7 +63,7 @@ describe("ImageUploader", () => {
 
     // Click Reset
     const resetButton = screen.getByTestId("reset-button");
-    expect(resetButton).toHaveClass("bg-indigo-600", "text-white");
+    expect(resetButton).toHaveClass("bg-red-600", "text-white");
     fireEvent.click(resetButton);
     await waitFor(() => {
       expect(mockOnReset).toHaveBeenCalled();
