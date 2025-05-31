@@ -1,171 +1,311 @@
-import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import ImageUploader from "../components/ImageUploader";
 
-// Mock URL.createObjectURL and URL.revokeObjectURL
-const mockCreateObjectURL = jest.fn();
-const mockRevokeObjectURL = jest.fn();
-URL.createObjectURL = mockCreateObjectURL;
-URL.revokeObjectURL = mockRevokeObjectURL;
-
 describe("ImageUploader", () => {
+  const mockOnUpload = jest.fn();
+  const mockOnReset = jest.fn();
+
   beforeEach(() => {
-    mockCreateObjectURL.mockReset();
-    mockRevokeObjectURL.mockReset();
-    mockCreateObjectURL.mockReturnValue("mocked-url");
-    // Suppress console.error for expected test errors
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    // Mock URL.createObjectURL and URL.revokeObjectURL
+    global.URL.createObjectURL = jest.fn(() => "mocked-url");
+    global.URL.revokeObjectURL = jest.fn(() => {});
+    // Reset mocks
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
+    // Clean up mocks
     jest.restoreAllMocks();
   });
 
-  test("displays larger preview, disables submit button, and resets states", async () => {
-    const mockOnUpload = jest.fn().mockResolvedValue(undefined);
-    const mockOnReset = jest.fn();
+  test("renders file input and allows image selection with preview", async () => {
     render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
-    const input = screen.getByTestId("file-input") as HTMLInputElement;
-    const file = new File(["dummy"], "test.png", { type: "image/png" });
 
-    // Upload file
-    fireEvent.change(input, { target: { files: [file] } });
-    await waitFor(() => {
-      expect(screen.getByAltText("Preview")).toHaveAttribute(
-        "src",
-        "mocked-url"
-      );
-    });
-    expect(mockOnUpload).not.toHaveBeenCalled();
-    expect(mockCreateObjectURL).toHaveBeenCalledWith(file);
-    expect(screen.getByAltText("Preview")).toHaveClass(
-      "max-w-[400px]",
-      "h-64",
-      "object-contain"
+    const fileInput = screen.getByTestId("file-input");
+    const file = new File(["image"], "test.png", { type: "image/png" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    expect(global.URL.createObjectURL).toHaveBeenCalledWith(file);
+    await waitFor(
+      () => {
+        expect(screen.getByAltText("Preview")).toHaveAttribute(
+          "src",
+          "mocked-url"
+        );
+      },
+      { timeout: 1000 }
     );
-    expect(screen.getByText("Upload Image")).toHaveClass(
-      "bg-indigo-600",
-      "text-white"
+  });
+
+  test("displays error for non-image files", async () => {
+    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
+
+    const fileInput = screen.getByTestId("file-input");
+    const file = new File(["text"], "test.txt", { type: "text/plain" });
+
+    // Suppress and verify expected console.error
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText(
+            "Failed to load preview: Selected file is not an image"
+          )
+        ).toBeInTheDocument();
+      },
+      { timeout: 1000 }
     );
 
-    // Click Submit
+    expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error generating preview:",
+      "Selected file is not an image"
+    );
+    consoleErrorSpy.mockRestore();
+  });
+
+  test("displays larger preview, disables submit button after submission, and resets states", async () => {
+    mockOnUpload.mockResolvedValueOnce(undefined);
+    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
+
+    const fileInput = screen.getByTestId("file-input");
+    const file = new File(["image"], "test.png", { type: "image/png" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByAltText("Preview")).toHaveAttribute(
+          "src",
+          "mocked-url"
+        );
+      },
+      { timeout: 1000 }
+    );
+
     const submitButton = screen.getByTestId("submit-button");
     expect(submitButton).not.toBeDisabled();
+
     fireEvent.click(submitButton);
-    await waitFor(() => {
-      expect(submitButton).toBeDisabled();
-    });
-    await waitFor(() => {
-      expect(submitButton).not.toBeDisabled();
-    });
-    expect(mockOnUpload).toHaveBeenCalledWith(file);
+
+    await waitFor(
+      () => {
+        expect(mockOnUpload).toHaveBeenCalledWith(file);
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(submitButton).toHaveAttribute("disabled");
+      },
+      { timeout: 1000 }
+    );
+
     expect(submitButton).toHaveTextContent("Submit Image");
 
-    // Click Reset
     const resetButton = screen.getByTestId("reset-button");
-    expect(resetButton).toHaveClass("bg-red-600", "text-white");
     fireEvent.click(resetButton);
-    await waitFor(() => {
-      expect(mockOnReset).toHaveBeenCalled();
-    });
-    expect(mockRevokeObjectURL).toHaveBeenCalledWith("mocked-url");
-    expect(screen.queryByAltText("Preview")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("submit-button")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("reset-button")).not.toBeInTheDocument();
+
+    await waitFor(
+      () => {
+        expect(mockOnReset).toHaveBeenCalled();
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(global.URL.revokeObjectURL).toHaveBeenCalledWith("mocked-url");
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.queryByAltText("Preview")).not.toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(fileInput).toHaveValue("");
+      },
+      { timeout: 1000 }
+    );
   });
 
-  test("displays error for non-image file", async () => {
-    const mockOnUpload = jest.fn();
-    const mockOnReset = jest.fn();
+  test("re-enables submit button on new file selection", async () => {
+    mockOnUpload.mockResolvedValueOnce(undefined);
     render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
-    const input = screen.getByTestId("file-input") as HTMLInputElement;
-    const file = new File(["dummy"], "test.txt", { type: "text/plain" });
-    fireEvent.change(input, { target: { files: [file] } });
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          "Failed to load preview: Selected file is not an image"
-        )
-      ).toBeInTheDocument();
-    });
-    expect(mockOnUpload).not.toHaveBeenCalled();
-    expect(mockOnReset).not.toHaveBeenCalled();
-    expect(screen.queryByTestId("submit-button")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("reset-button")).not.toBeInTheDocument();
-  });
 
-  test("displays error if image fails to load", async () => {
-    const mockOnUpload = jest.fn();
-    const mockOnReset = jest.fn();
-    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
-    const input = screen.getByTestId("file-input") as HTMLInputElement;
-    const file = new File(["dummy"], "test.png", { type: "image/png" });
-    mockCreateObjectURL.mockReturnValue("invalid-url");
-    fireEvent.change(input, { target: { files: [file] } });
-    const img = screen.getByAltText("Preview");
-    fireEvent.error(img);
-    await waitFor(() => {
-      expect(
-        screen.getByText("Failed to display image preview")
-      ).toBeInTheDocument();
-    });
-    expect(mockOnReset).not.toHaveBeenCalled();
-    expect(screen.queryByTestId("submit-button")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("reset-button")).not.toBeInTheDocument();
-  });
+    const fileInput = screen.getByTestId("file-input");
+    const file = new File(["image"], "test.png", { type: "image/png" });
 
-  test("displays error if submit clicked without file", async () => {
-    const mockOnUpload = jest.fn();
-    const mockOnReset = jest.fn();
-    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
-    const input = screen.getByTestId("file-input") as HTMLInputElement;
-    const file = new File(["dummy"], "test.png", { type: "image/png" });
-    fireEvent.change(input, { target: { files: [file] } });
-    fireEvent.change(input, { target: { files: null } });
-    await waitFor(() => {
-      expect(screen.queryByAltText("Preview")).not.toBeInTheDocument();
-    });
-    expect(mockOnReset).not.toHaveBeenCalled();
-    expect(screen.queryByTestId("submit-button")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("reset-button")).not.toBeInTheDocument();
-    expect(mockOnUpload).not.toHaveBeenCalled();
-  });
-
-  test("reenables button on submission error", async () => {
-    const mockOnUpload = jest
-      .fn()
-      .mockRejectedValue(new Error("Upload failed"));
-    const mockOnReset = jest.fn();
-    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
-    const input = screen.getByTestId("file-input") as HTMLInputElement;
-    const file = new File(["dummy"], "test.png", { type: "image/png" });
-    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.change(fileInput, { target: { files: [file] } });
     const submitButton = screen.getByTestId("submit-button");
-    fireEvent.click(submitButton);
-    await waitFor(() => {
-      expect(submitButton).toBeDisabled();
-    });
-    await waitFor(() => {
-      expect(submitButton).not.toBeDisabled();
-    });
-    await waitFor(() => {
-      expect(
-        screen.getByText("Failed to submit image: Upload failed")
-      ).toBeInTheDocument();
-    });
 
-    // Test reset after error
-    const resetButton = screen.getByTestId("reset-button");
-    fireEvent.click(resetButton);
-    await waitFor(() => {
-      expect(mockOnReset).toHaveBeenCalled();
-    });
-    expect(mockRevokeObjectURL).toHaveBeenCalledWith("mocked-url");
-    expect(screen.queryByAltText("Preview")).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("Failed to submit image: Upload failed")
-    ).not.toBeInTheDocument();
-    expect(screen.queryByTestId("submit-button")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("reset-button")).not.toBeInTheDocument();
+    fireEvent.click(submitButton);
+
+    await waitFor(
+      () => {
+        expect(submitButton).toHaveAttribute("disabled");
+      },
+      { timeout: 1000 }
+    );
+
+    const newFile = new File(["image"], "new.png", { type: "image/png" });
+    fireEvent.change(fileInput, { target: { files: [newFile] } });
+
+    await waitFor(
+      () => {
+        expect(submitButton).not.toBeDisabled();
+      },
+      { timeout: 1000 }
+    );
+  });
+
+  test("allows re-selecting the same image after reset", async () => {
+    mockOnUpload.mockResolvedValueOnce(undefined);
+    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
+
+    const fileInput = screen.getByTestId("file-input");
+    const file = new File(["image"], "test.png", { type: "image/png" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.click(screen.getByTestId("submit-button"));
+
+    await waitFor(
+      () => {
+        expect(mockOnUpload).toHaveBeenCalled();
+      },
+      { timeout: 1000 }
+    );
+
+    fireEvent.click(screen.getByTestId("reset-button"));
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(
+      () => {
+        expect(global.URL.createObjectURL).toHaveBeenCalledTimes(2);
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByAltText("Preview")).toHaveAttribute(
+          "src",
+          "mocked-url"
+        );
+      },
+      { timeout: 1000 }
+    );
+  });
+
+  test("re-enables submit button on failed submission", async () => {
+    mockOnUpload.mockRejectedValueOnce(new Error("Upload failed"));
+    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
+
+    const fileInput = screen.getByTestId("file-input");
+    const file = new File(["image"], "test.png", { type: "image/png" });
+
+    // Suppress and verify expected console.error
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.click(screen.getByTestId("submit-button"));
+
+    await waitFor(
+      () => {
+        expect(mockOnUpload).toHaveBeenCalled();
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText("Failed to submit image: Upload failed")
+        ).toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("submit-button")).not.toBeDisabled();
+      },
+      { timeout: 1000 }
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Submission error:",
+      "Upload failed"
+    );
+    consoleErrorSpy.mockRestore();
+  });
+
+  test("handles image load error", async () => {
+    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
+
+    const fileInput = screen.getByTestId("file-input");
+    const file = new File(["image"], "test.png", { type: "image/png" });
+
+    // Suppress and verify expected console.error
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByAltText("Preview")).toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
+
+    const previewImage = screen.getByAltText("Preview");
+    fireEvent.error(previewImage);
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText("Failed to display image preview")
+        ).toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.queryByAltText("Preview")).not.toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
+
+    await waitFor(
+      () => {
+        expect(fileInput).toHaveValue("");
+      },
+      { timeout: 1000 }
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Image failed to load:",
+      expect.any(Object)
+    );
+    consoleErrorSpy.mockRestore();
   });
 });

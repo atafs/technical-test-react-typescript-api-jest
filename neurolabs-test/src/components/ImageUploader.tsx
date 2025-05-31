@@ -10,6 +10,7 @@ const ImageUploader: React.FC<Props> = ({ onUpload, onReset }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false); // New state for submission status
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref to clear input
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,12 +26,14 @@ const ImageUploader: React.FC<Props> = ({ onUpload, onReset }) => {
         setSelectedFile(file);
         setError(null);
         setIsSubmitting(false);
+        setIsSubmitted(false); // Reset submission status on new file selection
       } catch (err: any) {
         console.error("Error generating preview:", err.message);
         setError(`Failed to load preview: ${err.message}`);
         setPreview(null);
         setSelectedFile(null);
         setIsSubmitting(false);
+        setIsSubmitted(false);
       }
     } else {
       console.log("No file selected");
@@ -38,16 +41,18 @@ const ImageUploader: React.FC<Props> = ({ onUpload, onReset }) => {
       setPreview(null);
       setSelectedFile(null);
       setIsSubmitting(false);
+      setIsSubmitted(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (selectedFile && !isSubmitting) {
+    if (selectedFile && !isSubmitting && !isSubmitted) {
       setIsSubmitting(true);
       console.log("Submitting file:", selectedFile.name);
       try {
         await onUpload(selectedFile);
         setError(null);
+        setIsSubmitted(true); // Mark as submitted on success
       } catch (err: any) {
         console.error("Submission error:", err.message);
         setError(`Failed to submit image: ${err.message}`);
@@ -68,6 +73,7 @@ const ImageUploader: React.FC<Props> = ({ onUpload, onReset }) => {
     setSelectedFile(null);
     setError(null);
     setIsSubmitting(false);
+    setIsSubmitted(false); // Re-enable submit button on reset
     if (fileInputRef.current) {
       fileInputRef.current.value = ""; // Clear input to allow re-selection
     }
@@ -112,14 +118,15 @@ const ImageUploader: React.FC<Props> = ({ onUpload, onReset }) => {
               setPreview(null);
               setSelectedFile(null);
               setIsSubmitting(false);
+              setIsSubmitted(false);
             }}
           />
           <div className="flex gap-2 mt-2">
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSubmitted} // Disable if submitting or submitted
               className={`px-4 py-2 text-white font-medium rounded-lg shadow-md transition-colors duration-300 ${
-                isSubmitting
+                isSubmitting || isSubmitted
                   ? "bg-indigo-400 opacity-50 cursor-not-allowed"
                   : "bg-indigo-600 hover:bg-indigo-700"
               }`}
