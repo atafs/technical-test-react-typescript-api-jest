@@ -16,4 +16,8 @@
 
 ## Releases and Notes
 
+### Localhost server
+
 - Task 1: https://github.com/atafs/technical-test-react-typescript-api-jest/releases/tag/task1
+
+- Task 2: https://github.com/atafs/technical-test-react-typescript-api-jest/releases/tag/task2
