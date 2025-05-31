@@ -13,7 +13,7 @@ const Home: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800">Neurolabs Demo</h1>
           <button
             onClick={() => navigate("/")}
-            className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-300"
+            className="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-300"
           >
             Back
           </button>
