@@ -1,4 +1,4 @@
-import { getCatalogItems, getIRTasks } from "../src/services/ApiService";
+import { getCatalogItems, getIRTasks } from "../services/ApiService";
 
 global.fetch = jest.fn();
 

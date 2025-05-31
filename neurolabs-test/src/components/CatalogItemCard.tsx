@@ -11,14 +11,14 @@ const CatalogItemCard: React.FC<Props> = ({ item }) => {
       case "capture":
         return {
           border: "border-red-500 border-4",
-          text: "text-red-500 bg-red-100 py-1 rounded",
+          text: "text-red-500 bg-red-100 px-2 py-1 rounded",
         };
       case "active":
-        return { border: "border-green-200", text: "text-green-500" };
+        return { border: "border-green-500", text: "text-green-500" }; // Should be green-500
       case "inactive":
-        return { border: "border-gray-400", text: "text-gray-500" };
+        return { border: "border-gray-500", text: "text-gray-500" }; // Should be gray-500
       default:
-        return { border: "border-gray-400", text: "text-gray-600" };
+        return { border: "border-gray-300", text: "text-gray-600" };
     }
   };
 

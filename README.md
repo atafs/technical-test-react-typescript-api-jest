@@ -13,3 +13,7 @@
 - **Task 2**: Fetch IR tasks (GET /v2/image-recognition/tasks), allow image upload and submission (POST /v2/image-recognition/tasks/{task_uuid}/images), display request status, and check submission status.
 - **Tests**: Include Jest tests for key components.
 - **Submission**: Create a README, zip the project (excluding `node_modules` and `.env`), and I have informed Neurolabs that I use SuperGrok from xAI as my LLM of choice on a daily bases. It's my new google search and stack overflow engine as my GenAI.
+
+## Releases and Notes
+
+- Task 1: https://github.com/atafs/technical-test-react-typescript-api-jest/releases/tag/task1

@@ -22,6 +22,7 @@ const ImageUploader: React.FC<Props> = ({ onUpload }) => {
         accept="image/*"
         onChange={handleFileChange}
         className="mb-2"
+        data-testid="file-input" // Added for testing
       />
       {preview && (
         <img
