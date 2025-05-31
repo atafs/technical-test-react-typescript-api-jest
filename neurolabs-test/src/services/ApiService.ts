@@ -29,43 +29,60 @@ export const getIRTasks = async (): Promise<IRTask[]> => {
   return response.json();
 };
 
-export const submitImage = async (
-  taskUuid: string,
-  image: File
-): Promise<ImageSubmission> => {
-  const formData = new FormData();
-  formData.append("image", image);
-  const response = await fetch(
-    `${API_BASE_URL}/image-recognition/tasks/${taskUuid}/images`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-      },
-      body: formData,
+export const uploadImage = async (task_uuid: string, file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    const response = await fetch(
+      `/v2/image-recognition/tasks/${task_uuid}/images`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${
+            process.env.REACT_APP_API_KEY || "dummy-key"
+          }`,
+        },
+        body: formData,
+      }
+    );
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`Upload failed: ${response.status} ${errorBody}`);
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to submit image: ${response.statusText}`);
+    const data = await response.json();
+    console.log("Upload response data:", data);
+    return data;
+  } catch (err) {
+    console.error("Upload network or parsing error:", err);
+    throw err;
   }
-  return response.json();
 };
 
-export const getTaskStatus = async (
-  taskUuid: string,
-  imageId: string
-): Promise<TaskStatus> => {
-  const response = await fetch(
-    `${API_BASE_URL}/image-recognition/tasks/${taskUuid}/images/${imageId}`,
-    {
-      method: "GET",
-      headers: getHeaders(),
+export const getTaskStatus = async (task_uuid: string, image_id: string) => {
+  try {
+    const response = await fetch(
+      `/v2/image-recognition/tasks/${task_uuid}/images/${image_id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${
+            process.env.REACT_APP_API_KEY || "dummy-key"
+          }`,
+        },
+      }
+    );
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(
+        `Failed to fetch task status: ${response.status} ${errorBody}`
+      );
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch task status: ${response.statusText}`);
+    return response.json();
+  } catch (err) {
+    console.error("Network or parsing error:", err);
+    throw err;
   }
-  return response.json();
 };
 
 // Add this to make the file a module
