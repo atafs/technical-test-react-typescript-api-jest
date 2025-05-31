@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface Props {
   onUpload: (file: File) => Promise<void>;
@@ -10,6 +10,7 @@ const ImageUploader: React.FC<Props> = ({ onUpload, onReset }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null); // Ref to clear input
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,6 +68,9 @@ const ImageUploader: React.FC<Props> = ({ onUpload, onReset }) => {
     setSelectedFile(null);
     setError(null);
     setIsSubmitting(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // Clear input to allow re-selection
+    }
     onReset();
   };
 
@@ -92,6 +96,7 @@ const ImageUploader: React.FC<Props> = ({ onUpload, onReset }) => {
           onChange={handleFileChange}
           className="hidden"
           data-testid="file-input"
+          ref={fileInputRef} // Attach ref to input
         />
       </label>
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
