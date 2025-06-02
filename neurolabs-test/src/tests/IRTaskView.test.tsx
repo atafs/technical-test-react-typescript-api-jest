@@ -68,7 +68,14 @@ describe("IRTaskView", () => {
 
   it("resets submission status when reset button is clicked", async () => {
     const mockTasks: IRTask[] = [
-      { uuid: "task2", name: "Snack Recognition Task" },
+      {
+        uuid: "task2",
+        name: "Snack Recognition Task",
+        created_at: "2023-01-01T00:00:00Z",
+        updated_at: "2023-01-02T00:00:00Z",
+        compute_realogram: false,
+        compute_shares: false,
+      },
     ];
     (getIRTasks as jest.Mock).mockResolvedValue(mockTasks);
     (uploadImage as jest.Mock).mockResolvedValue(["img123"]);

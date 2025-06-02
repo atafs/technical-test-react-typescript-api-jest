@@ -29,7 +29,6 @@ describe("CatalogView", () => {
   });
 
   it("renders loading spinner while fetching items", () => {
-    // Mock getCatalogItems to not resolve immediately
     (getCatalogItems as jest.Mock).mockReturnValue(new Promise(() => {}));
 
     render(<CatalogView />);
@@ -59,6 +58,8 @@ describe("CatalogView", () => {
         name: "Item 1",
         thumbnail_url: "https://example.com/image.jpg",
         status: "active",
+        created_at: "2023-01-01T00:00:00Z",
+        updated_at: "2023-01-02T00:00:00Z",
       },
       {
         id: "2",
@@ -66,6 +67,8 @@ describe("CatalogView", () => {
         name: "Item 2",
         thumbnail_url: "https://example.com/image2.jpg",
         status: "capture",
+        created_at: "2023-01-01T00:00:00Z",
+        updated_at: "2023-01-02T00:00:00Z",
       },
     ];
     (getCatalogItems as jest.Mock).mockResolvedValue(mockItems);
