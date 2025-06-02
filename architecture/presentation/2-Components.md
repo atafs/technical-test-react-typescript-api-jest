@@ -1,3 +1,5 @@
+# Neurolabs Components Summary
+
 # Navigation Structure
 
 - **Framework**: Uses React Router for client-side navigation, configured with `BrowserRouter`, `Routes`, and `Route` components.
