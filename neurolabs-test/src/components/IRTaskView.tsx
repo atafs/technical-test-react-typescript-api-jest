@@ -36,20 +36,25 @@ const IRTaskView: React.FC = () => {
       setError("No task selected");
       return;
     }
+    if (!file || !(file instanceof File)) {
+      setError("Invalid file: Please select a valid image file");
+      return;
+    }
     try {
       setSubmission(null);
       setError(null);
+      console.log("Uploading image for task:", selectedTask, "File details:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+      });
       const response = await uploadImage(selectedTask, file);
       console.log("Upload response:", response);
       const image_id =
-        response.image_id ||
-        response.id ||
-        response.imageId ||
-        response.image_uuid;
+        Array.isArray(response) && response.length > 0 ? response[0] : null;
       if (!image_id) {
-        setError(
-          "Upload response missing image identifier (tried image_id, id, imageId, image_uuid)"
-        );
+        setError("Upload response does not contain a valid image identifier");
         return;
       }
       const newSubmission = { image_id, task_uuid: selectedTask };
@@ -81,12 +86,7 @@ const IRTaskView: React.FC = () => {
       >
         {tasks.map((task) => (
           <option key={task.uuid} value={task.uuid}>
-            <span
-              className="truncate inline-block max-w-[200px]"
-              title={task.name}
-            >
-              {task.name}
-            </span>
+            {task.name}
           </option>
         ))}
       </select>

@@ -10,60 +10,55 @@ const TaskStatusDisplay: React.FC<TaskStatusDisplayProps> = ({
   task_uuid,
   image_id,
 }) => {
-  const [status, setStatus] = useState<string>("");
+  const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState<number>(0);
-  const maxRetries = 5;
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!image_id) {
-      setError("Invalid image_id: cannot be undefined or empty");
-      return;
-    }
-
-    let intervalId: NodeJS.Timeout | null = null;
-
-    const pollStatus = async () => {
-      try {
-        const response = await getTaskStatus(task_uuid, image_id);
-        setStatus(response.status || "unknown");
-        setError(null);
-        setRetryCount(0);
-        if (response.status === "completed" || response.status === "failed") {
-          if (intervalId) clearInterval(intervalId);
-        }
-      } catch (err: any) {
-        console.error(
-          `Failed to fetch task status: ${err.message} (Task: ${task_uuid}, Image: ${image_id})`
-        );
-        if (err.message.includes("401")) {
-          setError("Unauthorized: Invalid API key. Please contact support.");
-          if (intervalId) clearInterval(intervalId);
-        } else if (err.message.includes("404") && retryCount < maxRetries) {
-          setError(
-            `Image not found, retrying (${retryCount + 1}/${maxRetries})...`
-          );
-          setRetryCount(retryCount + 1);
-        } else {
-          setError(`Failed to fetch task status: ${err.message}`);
-          if (intervalId) clearInterval(intervalId);
+    const pollStatus = async (attempts = 10, delay = 2000) => {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const response = await getTaskStatus(task_uuid, image_id);
+          console.log("Task status response:", response);
+          setStatus(response.status || "unknown");
+          setLoading(false);
+          return; // Exit the loop on success
+        } catch (err: any) {
+          if (err.message.includes("404")) {
+            console.log(
+              `Attempt ${
+                i + 1
+              }/${attempts}: Task status not found, retrying in ${delay}ms...`
+            );
+            if (i === attempts - 1) {
+              setError("Task status not found after multiple attempts");
+              setLoading(false);
+              return;
+            }
+            // Wait before retrying
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          } else {
+            console.error("Error fetching task status:", err.message);
+            setError(`Failed to fetch task status: ${err.message}`);
+            setLoading(false);
+            return;
+          }
         }
       }
     };
 
     pollStatus();
-    intervalId = setInterval(pollStatus, 5000);
+  }, [task_uuid, image_id]);
 
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [task_uuid, image_id, retryCount]);
+  if (loading) return <div className="p-4">Loading task status...</div>;
+  if (error) return <div className="p-4 text-red-500">{error}</div>;
 
-  if (error) {
-    return <div className="text-red-500 mt-2">{error}</div>;
-  }
-
-  return <div className="mt-2">Status: {status || "pending"}</div>;
+  return (
+    <div className="p-4 mt-4 border rounded">
+      <h3 className="text-xl font-semibold mb-2">Task Status</h3>
+      <p>Status: {status}</p>
+    </div>
+  );
 };
 
 export default TaskStatusDisplay;
