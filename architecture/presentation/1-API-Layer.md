@@ -1,4 +1,4 @@
-# Neurolabs API Functions Summary
+# Neurolabs Services Summary
 
 The following sections describe the key functions from the Neurolabs Frontend Engineer Technical Test TypeScript file, presented as individual cards for clarity.
 
