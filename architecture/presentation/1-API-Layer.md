@@ -11,7 +11,7 @@ The following sections describe the key functions from the Neurolabs Frontend En
   - Returns `CatalogItem[]`
   - Maps API response to typed objects
   - Logs requests and errors
-  - Handles thumbnail and status
+  - Handles thumbnail and status: Processes the `thumbnail_url` and `status` fields from the API response, mapping them to the `CatalogItem` type. Ensures `thumbnail_url` is a valid string (defaulting to an empty string if missing) for displaying item thumbnails in the UI. Maps `status` (e.g., 'capture' or other states) to highlight items needing attention, such as those requiring image capture, as specified in the test requirements. This enables the UI to visually distinguish item states based on their status.
 
 ## getIRTasks
 
