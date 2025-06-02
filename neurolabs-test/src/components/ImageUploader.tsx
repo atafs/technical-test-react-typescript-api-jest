@@ -7,11 +7,14 @@ interface ImageUploaderProps {
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, onReset }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files ? event.target.files[0] : null;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      setFile(selectedFile);
+      const url = URL.createObjectURL(selectedFile);
+      setPreviewUrl(url);
       console.log(
         "Selected file:",
         selectedFile.name,
@@ -20,14 +23,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, onReset }) => {
         "Type:",
         selectedFile.type
       );
-      setFile(selectedFile);
-      const previewUrl = URL.createObjectURL(selectedFile);
-      console.log("Preview URL set:", previewUrl);
-      setPreview(previewUrl);
-    } else {
-      console.log("No file selected");
-      setFile(null);
-      setPreview(null);
+      console.log("Preview URL set:", url);
     }
   };
 
@@ -35,60 +31,47 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, onReset }) => {
     if (file) {
       console.log("Submitting file:", file.name);
       onUpload(file);
-    } else {
-      console.log("No file to submit");
     }
   };
 
   const handleResetClick = () => {
     console.log("Resetting ImageUploader states");
-    if (preview) {
-      URL.revokeObjectURL(preview);
-    }
     setFile(null);
-    setPreview(null);
+    if (previewUrl) {
+      console.log("Revoking preview URL:", previewUrl);
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
     onReset();
   };
 
-  useEffect(() => {
-    return () => {
-      if (preview) {
-        console.log("Revoking preview URL:", preview);
-        URL.revokeObjectURL(preview);
-      }
-    };
-  }, [preview]);
-
   return (
-    <div className="mt-4">
+    <div className="mb-4">
       <input
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        data-testid="file-input"
         className="mb-2"
+        data-testid="file-input"
       />
-      {preview && (
-        <img
-          src={preview}
-          alt="preview"
-          className="w-32 h-32 object-cover mb-2"
-        />
+      {previewUrl && (
+        <div className="mb-2">
+          <img src={previewUrl} alt="Preview" className="max-w-xs" />
+        </div>
       )}
-      <div className="flex space-x-2">
+      <div className="flex gap-2">
         <button
           onClick={handleSubmit}
           disabled={!file}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
           data-testid="submit-button"
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
         >
-          Submit
+          Upload
         </button>
         <button
           onClick={handleResetClick}
-          disabled={!file}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           data-testid="reset-button"
-          className="px-4 py-2 bg-gray-500 text-white rounded disabled:bg-gray-300"
         >
           Reset
         </button>
