@@ -1,52 +1,101 @@
 import React, { useState, useEffect } from "react";
-import { getIRTasks } from "../services/ApiService"; // Adjust path if needed
+import { getIRTasks, uploadImage } from "../services/ApiService";
 import { IRTask } from "../types";
+import ImageUploader from "./ImageUploader";
+import TaskStatusDisplay from "./TaskStatusDisplay";
 
 const IRTaskView: React.FC = () => {
   const [tasks, setTasks] = useState<IRTask[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedTask, setSelectedTask] = useState<string>("");
+  const [submission, setSubmission] = useState<{
+    image_id: string;
+    task_uuid: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         setLoading(true);
-        const taskData = await getIRTasks(); // Returns IRTask[]
-        setTasks(taskData);
-        setError(null);
+        const data = await getIRTasks();
+        console.log("Fetched tasks (JSON):", JSON.stringify(data, null, 2));
+        setTasks(data);
+        if (data.length > 0) setSelectedTask(data[0].uuid);
       } catch (err) {
-        console.error("Error fetching tasks:", err);
-        setError("Failed to load tasks");
+        setError("Failed to fetch tasks");
       } finally {
         setLoading(false);
       }
     };
-
     fetchTasks();
   }, []);
 
-  if (loading) {
-    return <div>Loading tasks...</div>;
-  }
+  const handleUpload = async (file: File) => {
+    if (!selectedTask) {
+      setError("No task selected");
+      return;
+    }
+    try {
+      setSubmission(null);
+      setError(null);
+      const response = await uploadImage(selectedTask, file);
+      console.log("Upload response:", response);
+      const image_id =
+        response.image_id ||
+        response.id ||
+        response.imageId ||
+        response.image_uuid;
+      if (!image_id) {
+        setError(
+          "Upload response missing image identifier (tried image_id, id, imageId, image_uuid)"
+        );
+        return;
+      }
+      const newSubmission = { image_id, task_uuid: selectedTask };
+      setSubmission(newSubmission);
+      console.log("Set submission:", newSubmission);
+    } catch (err: any) {
+      console.error("Upload error:", err.message);
+      setError(`Failed to upload image: ${err.message}`);
+      setSubmission(null);
+    }
+  };
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  const handleReset = () => {
+    console.log("Resetting IRTaskView submission");
+    setSubmission(null);
+    setError(null);
+  };
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-500">{error}</div>;
 
   return (
-    <div>
-      <h2>Image Recognition Tasks</h2>
-      {tasks.length === 0 ? (
-        <p>No tasks available</p>
-      ) : (
-        <ul>
-          {tasks.map((task) => (
-            <li key={task.uuid}>
-              <strong>{task.name}</strong> (UUID: {task.uuid})
-              {/* Add button or form for image submission */}
-            </li>
-          ))}
-        </ul>
+    <div className="p-4 border rounded">
+      <h2 className="text-2xl font-semibold mb-4">Image Recognition Tasks</h2>
+      <select
+        value={selectedTask}
+        onChange={(e) => setSelectedTask(e.target.value)}
+        className="mb-4 p-2 border rounded w-full"
+      >
+        {tasks.map((task) => (
+          <option key={task.uuid} value={task.uuid}>
+            <span
+              className="truncate inline-block max-w-[200px]"
+              title={task.name}
+            >
+              {task.name}
+            </span>
+          </option>
+        ))}
+      </select>
+      <ImageUploader onUpload={handleUpload} onReset={handleReset} />
+      {submission && submission.image_id && (
+        <TaskStatusDisplay
+          task_uuid={submission.task_uuid}
+          image_id={submission.image_id}
+        />
       )}
     </div>
   );
