@@ -84,4 +84,5 @@
 - **General Notes**:
   - Styling uses Tailwind CSS for responsive, utility-first design, aligning with React best practices.
   - In development, a proxy (configured in `setupProxy.js`) mitigates CORS issues by forwarding requests to `https://staging.api.neurolabs.ai`, enabling client-side API calls.
-  - Components include minimal
+  - Components include minimal unit tests (e.g., using Jest and React Testing Library) to verify rendering and basic functionality, as required by the test.
+  - For production, consider adding more comprehensive tests, optimizing performance (e.g., memoizing API calls), and securing API key handling via environment variables.
