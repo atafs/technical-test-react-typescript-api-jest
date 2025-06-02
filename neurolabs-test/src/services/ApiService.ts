@@ -1,4 +1,4 @@
-import { CatalogItem, IRTask, ImageSubmission, TaskStatus } from "../types";
+import { CatalogItem, IRTask } from "../types";
 
 // Use proxy in development, fallback to full URL if proxy fails
 const API_BASE_URL =
@@ -12,20 +12,20 @@ const getHeaders = () => {
   if (!API_KEY) {
     throw new Error("API key is missing");
   }
-  const headers = {
+  return {
     accept: "application/json",
     "X-API-Key": API_KEY,
   };
-  console.log("Request headers:", headers); // Debug headers
-  return headers;
 };
 
 export const getCatalogItems = async (): Promise<CatalogItem[]> => {
   const url = `${API_BASE_URL}/catalog-items`;
   console.log("Fetching catalog items from:", url);
+  const headers = getHeaders();
+  console.log("Request headers:", headers);
   const response = await fetch(url, {
     method: "GET",
-    headers: getHeaders(),
+    headers,
   });
   if (!response.ok) {
     const errorBody = await response.text();
@@ -63,10 +63,12 @@ export const getCatalogItems = async (): Promise<CatalogItem[]> => {
 
 export const getIRTasks = async (): Promise<IRTask[]> => {
   const url = `${API_BASE_URL}/image-recognition/tasks?limit=50&offset=0`;
-  console.log("Fetching IR tasks from:", url); // Debug URL
+  console.log("Fetching IR tasks from:", url);
+  const headers = getHeaders();
+  console.log("Request headers:", headers);
   const response = await fetch(url, {
     method: "GET",
-    headers: getHeaders(),
+    headers,
   });
   if (!response.ok) {
     const errorBody = await response.text();
@@ -74,19 +76,34 @@ export const getIRTasks = async (): Promise<IRTask[]> => {
     throw new Error(`Failed to fetch IR tasks: ${response.statusText}`);
   }
   const data = await response.json();
-  console.log("IR tasks response:", data); // Debug response
+  console.log("IR tasks response:", data);
   return data.items || [];
 };
 
 export const uploadImage = async (task_uuid: string, file: File) => {
   try {
+    if (!file || !(file instanceof File)) {
+      throw new Error("Invalid file: File object is required");
+    }
+    console.log(
+      "File to upload:",
+      file.name,
+      "Size:",
+      file.size,
+      "Type:",
+      file.type
+    );
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("images", file);
     const url = `${API_BASE_URL}/image-recognition/tasks/${task_uuid}/images`;
-    console.log("Uploading image to:", url); // Debug URL
+    console.log("Uploading image to:", url);
+    const headers = {
+      "X-API-Key": API_KEY,
+    };
+    console.log("Request headers:", headers);
     const response = await fetch(url, {
       method: "POST",
-      headers: getHeaders(),
+      headers,
       body: formData,
     });
     if (!response.ok) {
@@ -95,7 +112,7 @@ export const uploadImage = async (task_uuid: string, file: File) => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    console.log("Upload response data:", data);
+    console.log("Upload response data:", JSON.stringify(data, null, 2));
     return data;
   } catch (err) {
     console.error("Upload network or parsing error:", err);
@@ -105,11 +122,16 @@ export const uploadImage = async (task_uuid: string, file: File) => {
 
 export const getTaskStatus = async (task_uuid: string, image_id: string) => {
   try {
+    if (!image_id) {
+      throw new Error("Invalid image_id: cannot be undefined or empty");
+    }
     const url = `${API_BASE_URL}/image-recognition/tasks/${task_uuid}/images/${image_id}`;
-    console.log("Fetching task status from:", url); // Debug URL
+    console.log("Fetching task status from:", url);
+    const headers = getHeaders();
+    console.log("Request headers:", headers);
     const response = await fetch(url, {
       method: "GET",
-      headers: getHeaders(),
+      headers,
     });
     if (!response.ok) {
       const errorBody = await response.text();
@@ -119,7 +141,7 @@ export const getTaskStatus = async (task_uuid: string, image_id: string) => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    console.log("Task status response:", data); // Debug response
+    console.log("Task status response:", data);
     return data;
   } catch (err) {
     console.error("Network or parsing error:", err);
