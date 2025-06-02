@@ -1,5 +1,3 @@
-# Neurolabs Components Summary
-
 # Navigation Structure
 
 - **Framework**: Uses React Router for client-side navigation, configured with `BrowserRouter`, `Routes`, and `Route` components.
@@ -19,20 +17,18 @@
 
 - **CatalogView**:
   - **Purpose**: Visualizes catalog items fetched from the API, fulfilling Task 1 of the test.
-  - **Supported by**: `CatalogItemCard`, which renders individual catalog items.
+  - **Supported by**: `CatalogItemCard`, which renders individual items.
   - **Key Features**:
-    - Fetches items using `getCatalogItems` and displays them in a responsive grid (`grid-cols-1 sm:grid-cols-2`).
-    - Shows a loading spinner (`LoadingSpinner`) during fetch and an error message (`ErrorMessage`) if the fetch fails.
-    - Delegates item rendering to `CatalogItemCard`, which displays thumbnails, names, statuses, barcodes, and brands, with status-specific styling (e.g., red border for 'PROCESSING', green for 'READY').
-    - Highlights items needing 'capture' status via `CatalogItemCard`’s styling, as required by the test.
+    - Fetches items using `getCatalogItems` and displays them in a **responsive grid layout** (using `grid-cols-1 sm:grid-cols-2`), ensuring items are adaptively arranged on mobile (single column) and desktop (two columns) for optimal viewing.
+    - Implements **error and loading states** with `LoadingSpinner` during API fetch and `ErrorMessage` for failures, improving UX by providing clear feedback when data is unavailable.
+    - Delegates rendering to `CatalogItemCard`, which uses **dynamic status styling** to apply status-specific styles (e.g., red border and background for 'PROCESSING', green border for 'READY'), highlighting items needing 'capture' as required by the test for visual distinction.
 - **IRTaskView**:
   - **Purpose**: Manages image recognition tasks, including task selection, image uploads, and status display, fulfilling Task 2 of the test.
   - **Supported by**: `ImageUploader` for image selection and submission, `TaskStatusDisplay` for showing task status.
   - **Key Features**:
-    - Fetches tasks using `getIRTasks` and renders them in a dropdown, defaulting to the first task.
-    - Uses `ImageUploader` to select and preview images, validate file inputs (e.g., checks for valid `File` object), and submit images via `uploadImage`.
-    - Displays upload errors or success states and passes `task_uuid` and `image_id` to `TaskStatusDisplay` for status polling.
-    - `TaskStatusDisplay` polls `getTaskStatus` every 5 seconds (up to 30 attempts) to show status (e.g., 'processing', 'completed'), with retry and refresh options.
+    - Fetches tasks using `getIRTasks` and renders them in a dropdown with **task selection state management**, defaulting to the first task’s `uuid` and updating `selectedTask` state on user selection, ensuring seamless task choice for uploads.
+    - Uses `ImageUploader` for **image preview and validation**, generating a preview URL with `URL.createObjectURL` and validating file inputs (e.g., checks for valid `File` object and image type) before calling `uploadImage`, enhancing UX and preventing invalid submissions.
+    - Integrates `TaskStatusDisplay` for **status polling with retry logic**, polling `getTaskStatus` every 5 seconds (up to 30 attempts) to update status (e.g., 'processing', 'completed'). Displays a "Retry" button if polling fails (e.g., 404 after max attempts) to restart polling and a "Refresh Status" button in success state for manual updates, ensuring robust feedback for uploaded images as required by the test.
 
 ## CatalogItemCard
 
@@ -86,5 +82,4 @@
 - **General Notes**:
   - Styling uses Tailwind CSS for responsive, utility-first design, aligning with React best practices.
   - In development, a proxy (configured in `setupProxy.js`) mitigates CORS issues by forwarding requests to `https://staging.api.neurolabs.ai`, enabling client-side API calls.
-  - Components include minimal unit tests (e.g., using Jest and React Testing Library) to verify rendering and basic functionality, as required by the test.
-  - For production, consider adding more comprehensive tests, optimizing performance (e.g., memoizing API calls), and securing API key handling via environment variables.
+  - Components include minimal
