@@ -1,23 +1,69 @@
-# Prerequisites and Project Requirements
+# Neurolabs Frontend Engineer Technical Test
+
+This is a React + TypeScript application for the Neurolabs Frontend Engineer Technical Test, integrating with the Neurolabs Staging API to visualize catalog items and submit image recognition tasks.
 
 ## Prerequisites
 
-- **Node.js**: Ensure Node.js (v16 or later) and npm are installed.
-- **Text Editor**: Use VS Code or any editor with TypeScript support.
-- **API Key**: Have the Neurolabs API key ready (provided by the test team).
-- **Terminal**: Access to a terminal for running commands.
+- Node.js (v16 or higher)
+- npm (v8 or higher)
+- API key for the Neurolabs Staging API (provided by Neurolabs)
 
-## Project Requirements
+## Setup and Running the Application
 
-- **Task 1**: Fetch and display catalog items (GET /v2/catalog-items), showing thumbnails and highlighting items with `status: "capture"`.
-- **Task 2**: Fetch IR tasks (GET /v2/image-recognition/tasks), allow image upload and submission (POST /v2/image-recognition/tasks/{task_uuid}/images), display request status, and check submission status.
-- **Tests**: Include Jest tests for key components.
-- **Submission**: Create a README, zip the project (excluding `node_modules` and `.env`), and I have informed Neurolabs that I use SuperGrok from xAI as my LLM of choice on a daily bases. It's my new google search and stack overflow engine as my GenAI.
+1. **Clone the Repository**
 
-## Releases and Notes
+   ```bash
+   git clone https://github.com/atafs/technical-test-react-typescript-api-jest.git>
+   cd neurolabs-test
+   ```
 
-### Localhost server
+2. **Install Dependencies**
+   Install the required npm packages:
 
-- Task 1: https://github.com/atafs/technical-test-react-typescript-api-jest/releases/tag/task1
+   ```bash
+   npm install
+   ```
 
-- Task 2: https://github.com/atafs/technical-test-react-typescript-api-jest/releases/tag/task2
+3. **Configure API Key**
+
+   - Create a `.env` file in the root directory.
+   - Add your Neurolabs Staging API key:
+     ```
+     REACT_APP_API_KEY=your-api-key-here
+     ```
+
+4. **Start the Development Server**
+   Run the application locally:
+
+   ```bash
+   npm start
+   ```
+
+   - The app will open in your default browser at `http://localhost:3000`.
+   - Note: If you encounter CORS issues, ensure the `"proxy": "https://staging.api.neurolabs.ai/"` is set in `package.json`.
+
+5. **Run Tests**
+   Execute the test suite to verify functionality:
+   ```bash
+   npm test
+   ```
+   - Tests are written using Jest and React Testing Library.
+   - Press `a` to run all tests or follow prompts for specific test runs.
+
+## Project Structure
+
+- `src/`: Contains the React components, API integration, and TypeScript code.
+- `src/components/ImageUploader.tsx`: Handles image selection, preview, and submission.
+- `public/`: Static assets and HTML template.
+- `tests/`: Test files for components and API interactions.
+
+## Notes
+
+- The application uses Tailwind CSS for styling. Ensure Tailwind is properly configured in `tailwind.config.js`.
+- For API requests, refer to the [Neurolabs Staging API docs](https://staging.api.neurolabs.ai/docs).
+- Feedback on the API, docs, or test is welcome, as per the Neurolabs test instructions.
+
+## Troubleshooting
+
+- If `npm start` fails, ensure all dependencies are installed and the API key is correct.
+- For test failures, check the console output for specific error messages.
