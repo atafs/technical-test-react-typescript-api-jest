@@ -22,7 +22,7 @@ const getHeaders = () => {
 
 export const getCatalogItems = async (): Promise<CatalogItem[]> => {
   const url = `${API_BASE_URL}/catalog-items`;
-  console.log("Fetching catalog items from:", url); // Debug URL
+  console.log("Fetching catalog items from:", url);
   const response = await fetch(url, {
     method: "GET",
     headers: getHeaders(),
@@ -35,8 +35,30 @@ export const getCatalogItems = async (): Promise<CatalogItem[]> => {
     throw new Error(`Failed to fetch catalog items: ${response.statusText}`);
   }
   const data = await response.json();
-  console.log("Catalog items response:", data); // Debug response
-  return data;
+  console.log("Catalog items response:", data);
+  return (data.items || []).map((item: any) => ({
+    id: item.uuid || "",
+    uuid: item.uuid || "",
+    name: item.name || "",
+    thumbnail_url: item.thumbnail_url || "",
+    status: item.status || "",
+    barcode: item.barcode,
+    custom_id: item.custom_id,
+    height: item.height,
+    width: item.width,
+    depth: item.depth,
+    brand: item.brand,
+    size: item.size,
+    container_type: item.container_type,
+    flavour: item.flavour,
+    packaging_size: item.packaging_size,
+    created_at: item.created_at || "",
+    updated_at: item.updated_at || "",
+    description: undefined,
+    category: undefined,
+    metadata: undefined,
+    image_count: undefined,
+  }));
 };
 
 export const getIRTasks = async (): Promise<IRTask[]> => {
@@ -53,7 +75,7 @@ export const getIRTasks = async (): Promise<IRTask[]> => {
   }
   const data = await response.json();
   console.log("IR tasks response:", data); // Debug response
-  return data;
+  return data.items || [];
 };
 
 export const uploadImage = async (task_uuid: string, file: File) => {
