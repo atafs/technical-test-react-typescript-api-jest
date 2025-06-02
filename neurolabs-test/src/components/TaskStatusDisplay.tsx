@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getTaskStatus } from "../services/ApiService";
 
 interface TaskStatusDisplayProps {
@@ -13,49 +13,67 @@ const TaskStatusDisplay: React.FC<TaskStatusDisplayProps> = ({
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [retryCount, setRetryCount] = useState(0); // Track manual retries
-
-  const pollStatus = async (attempts = 30, delay = 5000) => {
-    setLoading(true);
-    setError(null);
-    for (let i = 0; i < attempts; i++) {
-      try {
-        const response = await getTaskStatus(task_uuid, image_id);
-        console.log("Task status response:", response);
-        setStatus(response.status || "unknown");
-        setLoading(false);
-        return;
-      } catch (err: any) {
-        if (err.message.includes("404")) {
-          console.log(
-            `Attempt ${
-              i + 1
-            }/${attempts}: Task status not found, retrying in ${delay}ms...`
-          );
-          if (i === attempts - 1) {
-            setError(
-              "Task status not found after multiple attempts. The image may still be processing."
-            );
-            setLoading(false);
-            return;
-          }
-          await new Promise((resolve) => setTimeout(resolve, delay));
-        } else {
-          console.error("Error fetching task status:", err.message);
-          setError(`Failed to fetch task status: ${err.message}`);
-          setLoading(false);
-          return;
-        }
-      }
-    }
-  };
+  const [retryCount, setRetryCount] = useState(0);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
+
+    const pollStatus = async (attempts = 30, delay = 5000) => {
+      setLoading(true);
+      setError(null);
+      for (let i = 0; i < attempts; i++) {
+        if (!isMounted.current) {
+          console.log("Polling stopped: Component unmounted");
+          return;
+        }
+
+        try {
+          const response = await getTaskStatus(task_uuid, image_id);
+          console.log("Task status response:", response);
+          if (isMounted.current) {
+            setStatus(response.status || "unknown");
+            setLoading(false);
+          }
+          return;
+        } catch (err: any) {
+          if (err.message.includes("404")) {
+            console.log(
+              `Attempt ${
+                i + 1
+              }/${attempts}: Task status not found, retrying in ${delay}ms...`
+            );
+            if (i === attempts - 1) {
+              if (isMounted.current) {
+                setError(
+                  "Task status not found after multiple attempts. The image may still be processing."
+                );
+                setLoading(false);
+              }
+              return;
+            }
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          } else {
+            console.error("Error fetching task status:", err.message);
+            if (isMounted.current) {
+              setError(`Failed to fetch task status: ${err.message}`);
+              setLoading(false);
+            }
+            return;
+          }
+        }
+      }
+    };
+
     pollStatus();
-  }, [task_uuid, image_id, retryCount]); // Re-run polling on retryCount change
+
+    return () => {
+      isMounted.current = false;
+    };
+  }, [task_uuid, image_id, retryCount]);
 
   const handleRetry = () => {
-    setRetryCount((prev) => prev + 1); // Increment retryCount to trigger polling
+    setRetryCount((prev) => prev + 1);
   };
 
   if (loading) return <div className="p-4">Loading task status...</div>;

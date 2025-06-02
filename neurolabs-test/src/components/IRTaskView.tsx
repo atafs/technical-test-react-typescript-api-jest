@@ -4,7 +4,8 @@ import { IRTask } from "../types";
 import ImageUploader from "./ImageUploader";
 import TaskStatusDisplay from "./TaskStatusDisplay";
 
-const IRTaskView: React.FC = () => {
+// Explicitly define that IRTaskView takes no props
+const IRTaskView: React.FC<{}> = () => {
   const [tasks, setTasks] = useState<IRTask[]>([]);
   const [selectedTask, setSelectedTask] = useState<string>("");
   const [submission, setSubmission] = useState<{
@@ -17,7 +18,6 @@ const IRTaskView: React.FC = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        setLoading(true);
         const data = await getIRTasks();
         console.log("Fetched tasks (JSON):", JSON.stringify(data, null, 2));
         setTasks(data);
@@ -41,7 +41,7 @@ const IRTaskView: React.FC = () => {
       return;
     }
     try {
-      setSubmission(null);
+      setSubmission(null); // Clear previous submission
       setError(null);
       console.log("Uploading image for task:", selectedTask, "File details:", {
         name: file.name,
@@ -63,7 +63,6 @@ const IRTaskView: React.FC = () => {
     } catch (err: any) {
       console.error("Upload error:", err.message);
       setError(`Failed to upload image: ${err.message}`);
-      setSubmission(null);
     }
   };
 
@@ -91,7 +90,7 @@ const IRTaskView: React.FC = () => {
         ))}
       </select>
       <ImageUploader onUpload={handleUpload} onReset={handleReset} />
-      {submission && submission.image_id && (
+      {submission && (
         <TaskStatusDisplay
           task_uuid={submission.task_uuid}
           image_id={submission.image_id}
