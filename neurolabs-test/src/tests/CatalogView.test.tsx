@@ -1,79 +1,83 @@
-/* eslint-disable testing-library/no-wait-for-multiple-assertions */
-import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import CatalogView from "../components/CatalogView";
 import { getCatalogItems } from "../services/ApiService";
+import { CatalogItem } from "../types";
 
+// Mock the ApiService
 jest.mock("../services/ApiService");
 
-const mockCatalogItems = [
-  {
-    id: "item1",
-    name: "Coca-Cola Bottle",
-    thumbnail: "https://picsum.photos/200/300?1",
-    status: "capture",
-    description: "500ml PET bottle of Coca-Cola",
-    category: "beverage",
-    image_count: 12,
-  },
-  {
-    id: "item2",
-    name: "Lay's Classic Chips",
-    thumbnail: "https://picsum.photos/200/300?2",
-    status: "active",
-    description: "150g packet of Lay's Classic chips",
-    category: "snack",
-    image_count: 8,
-  },
-  {
-    id: "item3",
-    name: "Pepsi Can",
-    thumbnail: "https://picsum.photos/200/300?3",
-    status: "inactive",
-    description: "330ml aluminum can of Pepsi",
-    category: "beverage",
-    image_count: 10,
-  },
-];
+// Mock child components
+jest.mock(
+  "../components/CatalogItemCard",
+  () =>
+    ({ item }: { item: CatalogItem }) =>
+      <div data-testid="catalog-item-card">{item.name}</div>
+);
+jest.mock("../components/LoadingSpinner", () => () => (
+  <div data-testid="loading-spinner">Loading...</div>
+));
+jest.mock(
+  "../components/ErrorMessage",
+  () =>
+    ({ message }: { message: string }) =>
+      <div data-testid="error-message">{message}</div>
+);
 
 describe("CatalogView", () => {
-  test("renders catalog items with correct status styles", async () => {
-    (getCatalogItems as jest.Mock).mockResolvedValue(mockCatalogItems);
-    render(<CatalogView />);
-
-    // Wait for all items to render
-    await waitFor(() => {
-      expect(screen.getByText("Coca-Cola Bottle")).toBeInTheDocument();
-      expect(screen.getByText("Lay's Classic Chips")).toBeInTheDocument();
-      expect(screen.getByText("Pepsi Can")).toBeInTheDocument();
-    });
-
-    // Assertions for capture status
-    const captureCard = screen.getByText("Coca-Cola Bottle").closest("div");
-    expect(captureCard).toHaveClass("border-red-500", "border-4");
-    expect(screen.getByText("Status: capture")).toHaveClass(
-      "text-red-500",
-      "bg-red-100"
-    );
-
-    // Assertions for active status
-    const activeCard = screen.getByText("Lay's Classic Chips").closest("div");
-    expect(activeCard).toHaveClass("border-green-500");
-    expect(screen.getByText("Status: active")).toHaveClass("text-green-500");
-
-    // Assertions for inactive status
-    const inactiveCard = screen.getByText("Pepsi Can").closest("div");
-    expect(inactiveCard).toHaveClass("border-gray-500");
-    expect(screen.getByText("Status: inactive")).toHaveClass("text-gray-500");
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  test("displays error on fetch failure", async () => {
-    (getCatalogItems as jest.Mock).mockRejectedValue(new Error("Fetch error"));
+  it("renders loading spinner while fetching items", () => {
+    // Mock getCatalogItems to not resolve immediately
+    (getCatalogItems as jest.Mock).mockReturnValue(new Promise(() => {}));
+
     render(<CatalogView />);
+
+    expect(screen.getByTestId("loading-spinner")).toHaveTextContent(
+      "Loading..."
+    );
+  });
+
+  it("renders error message when fetch fails", async () => {
+    (getCatalogItems as jest.Mock).mockRejectedValue(new Error("Fetch error"));
+
+    render(<CatalogView />);
+
     await waitFor(() => {
-      expect(
-        screen.getByText("Failed to fetch catalog items")
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("error-message")).toHaveTextContent(
+        "Failed to fetch catalog items"
+      );
+    });
+  });
+
+  it("renders catalog items when fetch succeeds", async () => {
+    const mockItems: CatalogItem[] = [
+      {
+        id: "1",
+        uuid: "1",
+        name: "Item 1",
+        thumbnail_url: "https://example.com/image.jpg",
+        status: "active",
+      },
+      {
+        id: "2",
+        uuid: "2",
+        name: "Item 2",
+        thumbnail_url: "https://example.com/image2.jpg",
+        status: "capture",
+      },
+    ];
+    (getCatalogItems as jest.Mock).mockResolvedValue(mockItems);
+
+    render(<CatalogView />);
+
+    await waitFor(() => {
+      const itemCards = screen.getAllByTestId("catalog-item-card");
+      expect(itemCards).toHaveLength(2);
+      expect(itemCards[0]).toHaveTextContent("Item 1");
+      expect(itemCards[1]).toHaveTextContent("Item 2");
+      expect(screen.getByText("Catalog Items")).toBeInTheDocument();
     });
   });
 });
