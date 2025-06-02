@@ -19,7 +19,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:3001/",
+  "proxy": "https://staging.api.neurolabs.ai/",
   "eslintConfig": {
     "extends": [
       "react-app",
