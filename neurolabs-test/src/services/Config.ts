@@ -3,5 +3,8 @@ export const API_BASE_URL =
     ? "/v2"
     : "https://staging.api.neurolabs.ai/v2";
 
-export const API_KEY: string =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODAxNjA1MjMsImlhdCI6MTc0ODYyNDUyMywiaXNzIjoiaHR0cHM6Ly9zdGFnaW5nLmFwaS5uZXVyb2xhYnMuYWkvIiwianRpIjoiMjMxZjk0MWUtNTA5YS00MDE0LTk4OTMtOTNiYTM5ZTIwYWZjIiwic3ViIjoiYjExY2ZjZDAtMzk4YS00OGE1LTljODktODZjNDdlODBlZmY1In0.xbxonZ0YX6J3_OIlIk_FL0hE4rymBDre8FE6pCEaqE4";
+export const API_KEY: string = process.env.REACT_APP_API_KEY || "";
+
+if (!API_KEY) {
+  throw new Error("REACT_APP_API_KEY is not defined in the .env file");
+}
