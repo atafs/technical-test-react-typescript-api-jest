@@ -1,12 +1,5 @@
+import { API_BASE_URL, API_KEY } from "./Config"; // Adjust the path based on your file structure
 import { CatalogItem, IRTask } from "../types";
-
-// Use proxy in development, fallback to full URL if proxy fails
-const API_BASE_URL =
-  process.env.NODE_ENV === "development"
-    ? "/v2"
-    : "https://staging.api.neurolabs.ai/v2";
-const API_KEY: string =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODAxNjA1MjMsImlhdCI6MTc0ODYyNDUyMywiaXNzIjoiaHR0cHM6Ly9zdGFnaW5nLmFwaS5uZXVyb2xhYnMuYWkvIiwianRpIjoiMjMxZjk0MWUtNTA5YS00MDE0LTk4OTMtOTNiYTM5ZTIwYWZjIiwic3ViIjoiYjExY2ZjZDAtMzk4YS00OGE1LTljODktODZjNDdlODBlZmY1In0.xbxonZ0YX6J3_OIlIk_FL0hE4rymBDre8FE6pCEaqE4";
 
 const getHeaders = () => {
   if (!API_KEY) {
