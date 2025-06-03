@@ -13,7 +13,7 @@ This is a React + TypeScript application for the Neurolabs Frontend Engineer Tec
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/atafs/technical-test-react-typescript-api-jest.git>
+   git clone https://github.com/atafs/technical-test-react-typescript-api-jest.git
    cd neurolabs-test
    ```
 
