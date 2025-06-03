@@ -1,4 +1,7 @@
-export const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "";
+export const API_BASE_URL: string =
+  process.env.NODE_ENV === "development"
+    ? "/v2"
+    : process.env.REACT_APP_API_BASE_URL || "";
 
 export const API_KEY: string = process.env.REACT_APP_API_KEY || "";
 
@@ -6,7 +9,7 @@ if (!API_KEY) {
   throw new Error("REACT_APP_API_KEY is not defined in the .env file");
 }
 
-if (!API_BASE_URL) {
+if (process.env.NODE_ENV !== "development" && !API_BASE_URL) {
   throw new Error("REACT_APP_API_BASE_URL is not defined in the .env file");
 }
 
