@@ -1,4 +1,4 @@
-import { API_BASE_URL, API_KEY } from "./Config"; // Adjust the path based on your file structure
+import { API_BASE_URL, API_KEY, logger } from "./Config";
 import { CatalogItem, IRTask } from "../types";
 
 const getHeaders = () => {
@@ -13,22 +13,25 @@ const getHeaders = () => {
 
 export const getCatalogItems = async (): Promise<CatalogItem[]> => {
   const url = `${API_BASE_URL}/catalog-items`;
-  console.log("Fetching catalog items from:", url);
+  logger.log("Fetching catalog items from:", url);
   const headers = getHeaders();
-  console.log("Request headers:", headers);
+  logger.log("Request headers:", {
+    accept: headers.accept,
+    "X-API-Key": "[REDACTED]",
+  });
   const response = await fetch(url, {
     method: "GET",
     headers,
   });
   if (!response.ok) {
     const errorBody = await response.text();
-    console.error(
+    logger.error(
       `Failed to fetch catalog items: ${response.status} ${errorBody}`
     );
     throw new Error(`Failed to fetch catalog items: ${response.statusText}`);
   }
   const data = await response.json();
-  console.log("Catalog items response:", data);
+  logger.log("Catalog items response:", data);
   return (data.items || []).map((item: any) => ({
     id: item.uuid || "",
     uuid: item.uuid || "",
@@ -56,20 +59,23 @@ export const getCatalogItems = async (): Promise<CatalogItem[]> => {
 
 export const getIRTasks = async (): Promise<IRTask[]> => {
   const url = `${API_BASE_URL}/image-recognition/tasks?limit=50&offset=0`;
-  console.log("Fetching IR tasks from:", url);
+  logger.log("Fetching IR tasks from:", url);
   const headers = getHeaders();
-  console.log("Request headers:", headers);
+  logger.log("Request headers:", {
+    accept: headers.accept,
+    "X-API-Key": "[REDACTED]",
+  });
   const response = await fetch(url, {
     method: "GET",
     headers,
   });
   if (!response.ok) {
     const errorBody = await response.text();
-    console.error(`Failed to fetch IR tasks: ${response.status} ${errorBody}`);
-    throw new Error(`Failed to fetch IR tasks: ${response.statusText}`);
+    logger.error(`Failed to fetch IR tasks: ${response.status} ${errorBody}`);
+    throw new Error(`Failed to fetch IR tasks: ${response.statusText}`); // Fixed error message
   }
   const data = await response.json();
-  console.log("IR tasks response:", data);
+  logger.log("IR tasks response:", data);
   return data.items || [];
 };
 
@@ -78,7 +84,7 @@ export const uploadImage = async (task_uuid: string, file: File) => {
     if (!file || !(file instanceof File)) {
       throw new Error("Invalid file: File object is required");
     }
-    console.log(
+    logger.log(
       "File to upload:",
       file.name,
       "Size:",
@@ -89,11 +95,11 @@ export const uploadImage = async (task_uuid: string, file: File) => {
     const formData = new FormData();
     formData.append("images", file);
     const url = `${API_BASE_URL}/image-recognition/tasks/${task_uuid}/images`;
-    console.log("Uploading image to:", url);
+    logger.log("Uploading image to:", url);
     const headers = {
       "X-API-Key": API_KEY,
     };
-    console.log("Request headers:", headers);
+    logger.log("Request headers:", { "X-API-Key": "[REDACTED]" });
     const response = await fetch(url, {
       method: "POST",
       headers,
@@ -101,14 +107,14 @@ export const uploadImage = async (task_uuid: string, file: File) => {
     });
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error(`Upload failed: ${response.status} ${errorBody}`);
+      logger.error(`Upload failed: ${response.status} ${errorBody}`);
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    console.log("Upload response data:", JSON.stringify(data, null, 2));
+    logger.log("Upload response data:", JSON.stringify(data, null, 2));
     return data;
   } catch (err) {
-    console.error("Upload network or parsing error:", err);
+    logger.error("Upload network or parsing error:", err);
     throw err;
   }
 };
@@ -119,28 +125,30 @@ export const getTaskStatus = async (task_uuid: string, image_id: string) => {
       throw new Error("Invalid image_id: cannot be undefined or empty");
     }
     const url = `${API_BASE_URL}/image-recognition/tasks/${task_uuid}/images/${image_id}`;
-    console.log("Fetching task status from:", url);
+    logger.log("Fetching task status from:", url);
     const headers = getHeaders();
-    console.log("Request headers:", headers);
+    logger.log("Request headers:", {
+      accept: headers.accept,
+      "X-API-Key": "[REDACTED]",
+    });
     const response = await fetch(url, {
       method: "GET",
       headers,
     });
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error(
+      logger.error(
         `Failed to fetch task status: ${response.status} ${errorBody}`
       );
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    console.log("Task status response:", data);
+    logger.log("Task status response:", data);
     return data;
   } catch (err) {
-    console.error("Network or parsing error:", err);
+    logger.error("Network or parsing error:", err);
     throw err;
   }
 };
 
-// Add this to make the file a module
 export {};
