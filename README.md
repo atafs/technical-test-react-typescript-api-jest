@@ -62,6 +62,7 @@ This is a React + TypeScript application for the Neurolabs Frontend Engineer Tec
 - The application uses Tailwind CSS for styling. Ensure Tailwind is properly configured in `tailwind.config.js`.
 - For API requests, refer to the [Neurolabs Staging API docs](https://staging.api.neurolabs.ai/docs).
 - Feedback on the API, docs, or test is welcome, as per the Neurolabs test instructions.
+- "output": "find src -type f -exec sh -c 'echo "File: {}"; cat "{}"' \; > output.txt",
 
 ## Troubleshooting
 
