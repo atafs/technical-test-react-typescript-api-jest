@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 
-// Custom logger for http-proxy-middleware
 const customLogger = {
   info: (...args) => {
     const message = args.join(" ");
@@ -37,8 +36,8 @@ try {
   module.exports = function (app) {
     const target =
       process.env.REACT_APP_ENV === "local"
-        ? "http://localhost:3001"
-        : "https://staging.api.neurolabs.ai";
+        ? "http://localhost:3001/v2" // Append /v2 to preserve prefix
+        : "https://staging.api.neurolabs.ai/v2";
 
     customLogger.info(
       `Setting up proxy middleware for /v2 to target ${target}`
@@ -52,9 +51,10 @@ try {
         logLevel: "debug",
         secure: target.includes("localhost") ? false : true,
         logger: customLogger,
+        pathRewrite: process.env.REACT_APP_ENV === "local" ? {} : { "/v2": "" }, // Preserve /v2 for local stage
       })
     );
   };
-} catch (error) {
-  customLogger.error(`Failed to load setupProxy.js: ${error}`);
+} catch (err) {
+  customLogger.error(`Failed to load setupProxy.js: ${err}`);
 }

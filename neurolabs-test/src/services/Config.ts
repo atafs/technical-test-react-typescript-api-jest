@@ -5,6 +5,10 @@ export const API_BASE_URL: string =
 
 export const API_KEY: string = process.env.REACT_APP_API_KEY || "";
 
+console.log("Config - REACT_APP_ENV:", process.env.REACT_APP_ENV); // Debug
+console.log("Config - API_BASE_URL:", API_BASE_URL); // Debug
+console.log("Config - API_KEY:", API_KEY); // Debug
+
 if (!API_KEY) {
   throw new Error("REACT_APP_API_KEY is not defined in the .env file");
 }
@@ -13,10 +17,8 @@ if (process.env.NODE_ENV !== "development" && !API_BASE_URL) {
   throw new Error("REACT_APP_API_BASE_URL is not defined in the .env file");
 }
 
-// Control logging based on environment
 const isDebug = process.env.NODE_ENV === "development";
 
-// Logging utility to gate debug logs
 export const logger = {
   log: (...args: any[]) => {
     if (isDebug) console.log(...args);
