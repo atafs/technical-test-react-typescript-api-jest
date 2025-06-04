@@ -105,10 +105,29 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, onReset }) => {
         </button>
         <button
           onClick={handleResetClick}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium shadow-md hover:bg-red-600 transition-all duration-300"
+          disabled={!file}
+          className="relative px-4 py-2 bg-red-600 text-white rounded-lg font-medium shadow-md hover:bg-red-700 transition-all duration-300 disabled:bg-gradient-to-r disabled:from-gray-300 disabled:to-gray-400 disabled:text-gray-600 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-none"
           data-testid="reset-button"
         >
-          Reset
+          <span className="flex items-center gap-2">
+            {(!file || isUploadDisabled) && (
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 11v6m0 0l-3-3m3 3l3-3m-9-3a9 9 0 1118 0 9 9 0 01-18 0z"
+                />
+              </svg>
+            )}
+            Reset
+          </span>
         </button>
       </div>
     </div>
