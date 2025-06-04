@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getIRTasks, uploadImage } from "../services/ApiService";
 import { IRTask } from "../types";
 import ImageUploader from "./ImageUploader";
@@ -15,6 +16,8 @@ const IRTaskView: React.FC<{}> = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+  
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -77,7 +80,15 @@ const IRTaskView: React.FC<{}> = () => {
 
   return (
     <div className="p-4 border rounded">
-      <h2 className="text-2xl font-semibold mb-4">Image Recognition Tasks</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold mb-4">Image Recognition Tasks</h2>
+        <button
+          onClick={() => navigate("/")}
+          className="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-300"
+        >
+          Back
+        </button>
+      </div>
       <select
         value={selectedTask}
         onChange={(e) => setSelectedTask(e.target.value)}
