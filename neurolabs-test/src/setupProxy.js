@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 // Custom logger for http-proxy-middleware
 const customLogger = {
@@ -6,7 +7,7 @@ const customLogger = {
     const message = args.join(" ");
     console.log(message);
     fs.appendFileSync(
-      "/Users/americotomas/Repos/staffengineer/technical-test-react-typescript-api-jest/neurolabs-test/proxy.log",
+      path.join(__dirname, "proxy.log"),
       `[${new Date().toISOString()}] ${message}\n`
     );
   },
@@ -14,7 +15,7 @@ const customLogger = {
     const message = args.join(" ");
     console.warn(message);
     fs.appendFileSync(
-      "/Users/americotomas/Repos/staffengineer/technical-test-react-typescript-api-jest/neurolabs-test/proxy.log",
+      path.join(__dirname, "proxy.log"),
       `[${new Date().toISOString()}] WARN: ${message}\n`
     );
   },
@@ -22,7 +23,7 @@ const customLogger = {
     const message = args.join(" ");
     console.error(message);
     fs.appendFileSync(
-      "/Users/americotomas/Repos/staffengineer/technical-test-react-typescript-api-jest/neurolabs-test/proxy.log",
+      path.join(__dirname, "proxy.log"),
       `[${new Date().toISOString()}] ERROR: ${message}\n`
     );
   },
@@ -31,35 +32,29 @@ const customLogger = {
 try {
   const { createProxyMiddleware } = require("http-proxy-middleware");
 
-  console.log("Loading setupProxy.js");
-
-  fs.appendFileSync(
-    "/Users/americotomas/Repos/staffengineer/technical-test-react-typescript-api-jest/neurolabs-test/proxy.log",
-    `[${new Date().toISOString()}] Loading setupProxy.js\n`
-  );
+  customLogger.info("Loading setupProxy.js");
 
   module.exports = function (app) {
-    console.log("Setting up proxy middleware for /v2");
-    fs.appendFileSync(
-      "/Users/americotomas/Repos/staffengineer/technical-test-react-typescript-api-jest/neurolabs-test/proxy.log",
-      `[${new Date().toISOString()}] Setting up proxy middleware for /v2\n`
+    const target =
+      process.env.REACT_APP_ENV === "local"
+        ? "http://localhost:3001"
+        : "https://staging.api.neurolabs.ai";
+
+    customLogger.info(
+      `Setting up proxy middleware for /v2 to target ${target}`
     );
 
     app.use(
       "/v2",
       createProxyMiddleware({
-        target: "https://staging.api.neurolabs.ai/v2", // Include /v2 in the target
+        target,
         changeOrigin: true,
         logLevel: "debug",
-        secure: false,
+        secure: target.includes("localhost") ? false : true,
         logger: customLogger,
       })
     );
   };
 } catch (error) {
-  console.error("Failed to load setupProxy.js:", error);
-  fs.appendFileSync(
-    "/Users/americotomas/Repos/staffengineer/technical-test-react-typescript-api-jest/neurolabs-test/proxy.log",
-    `[${new Date().toISOString()}] Failed to load setupProxy.js: ${error}\n`
-  );
+  customLogger.error(`Failed to load setupProxy.js: ${error}`);
 }
