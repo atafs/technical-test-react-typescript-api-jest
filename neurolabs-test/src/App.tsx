@@ -6,7 +6,7 @@ import IRTaskView from "./components/IRTaskView";
 
 const App: React.FC = () => {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true }}>
       <Routes>
         <Route
           path="/"

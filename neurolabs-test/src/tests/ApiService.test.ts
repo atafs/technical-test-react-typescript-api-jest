@@ -3,29 +3,44 @@ import {
   getIRTasks,
   uploadImage,
   getTaskStatus,
-} from "../services/ApiService";
-import { API_BASE_URL, API_KEY } from "../services/Config";
+} from '../services/ApiService';
+import { API_BASE_URL, API_KEY } from '../services/Config';
 
 // Mock the fetch API
 global.fetch = jest.fn();
 
-describe("API Functions", () => {
+describe('API Functions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.API_KEY = "test-api-key";
+    // Ensure environment variables are set (redundant with .env.test but for safety)
+    process.env.REACT_APP_API_KEY = 'test-api-key';
+    process.env.REACT_APP_API_BASE_URL = '/v2';
+    process.env.REACT_APP_ENV = 'test';
+
+    // Debug environment variables
+    console.log('Test - REACT_APP_API_KEY:', process.env.REACT_APP_API_KEY);
+    console.log('Test - API_BASE_URL:', API_BASE_URL);
+    console.log('Test - API_KEY:', API_KEY);
   });
 
-  describe("getCatalogItems", () => {
-    it("should fetch and return catalog items successfully", async () => {
+  afterEach(() => {
+    // Clean up environment variables to prevent test pollution
+    delete process.env.REACT_APP_API_KEY;
+    delete process.env.REACT_APP_API_BASE_URL;
+    delete process.env.REACT_APP_ENV;
+  });
+
+  describe('getCatalogItems', () => {
+    it('should fetch and return catalog items successfully', async () => {
       const mockResponse = {
         items: [
           {
-            uuid: "item-1",
-            name: "Test Item",
-            thumbnail_url: "http://example.com/thumbnail.jpg",
-            status: "capture",
-            created_at: "2025-01-01T00:00:00Z",
-            updated_at: "2025-01-02T00:00:00Z",
+            uuid: 'item-1',
+            name: 'Test Item',
+            thumbnail_url: 'http://example.com/thumbnail.jpg',
+            status: 'capture',
+            created_at: '2025-01-01T00:00:00Z',
+            updated_at: '2025-01-02T00:00:00Z',
           },
         ],
       };
@@ -38,19 +53,19 @@ describe("API Functions", () => {
       const result = await getCatalogItems();
 
       expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/catalog-items`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          accept: "application/json",
-          "X-API-Key": API_KEY,
+          accept: 'application/json',
+          'X-API-Key': API_KEY,
         },
       });
       expect(result).toEqual([
         {
-          id: "item-1",
-          uuid: "item-1",
-          name: "Test Item",
-          thumbnail_url: "http://example.com/thumbnail.jpg",
-          status: "capture",
+          id: 'item-1',
+          uuid: 'item-1',
+          name: 'Test Item',
+          thumbnail_url: 'http://example.com/thumbnail.jpg',
+          status: 'capture',
           barcode: undefined,
           custom_id: undefined,
           height: undefined,
@@ -61,8 +76,8 @@ describe("API Functions", () => {
           container_type: undefined,
           flavour: undefined,
           packaging_size: undefined,
-          created_at: "2025-01-01T00:00:00Z",
-          updated_at: "2025-01-02T00:00:00Z",
+          created_at: '2025-01-01T00:00:00Z',
+          updated_at: '2025-01-02T00:00:00Z',
           description: undefined,
           category: undefined,
           metadata: undefined,
@@ -71,27 +86,27 @@ describe("API Functions", () => {
       ]);
     });
 
-    it("should throw an error on failed fetch", async () => {
+    it('should throw an error on failed fetch', async () => {
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 500,
-        statusText: "Internal Server Error",
-        text: jest.fn().mockResolvedValueOnce("Server error"),
+        statusText: 'Internal Server Error',
+        text: jest.fn().mockResolvedValueOnce('Server error'),
       });
 
       await expect(getCatalogItems()).rejects.toThrow(
-        "Failed to fetch catalog items: Internal Server Error"
+        'Failed to fetch catalog items: Internal Server Error'
       );
     });
   });
 
-  describe("getIRTasks", () => {
-    it("should fetch and return IR tasks successfully", async () => {
+  describe('getIRTasks', () => {
+    it('should fetch and return IR tasks successfully', async () => {
       const mockResponse = {
         items: [
           {
-            uuid: "task-1",
-            name: "Test Task",
+            uuid: 'task-1',
+            name: 'Test Task',
           },
         ],
       };
@@ -106,36 +121,34 @@ describe("API Functions", () => {
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/image-recognition/tasks?limit=50&offset=0`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            accept: "application/json",
-            "X-API-Key": API_KEY,
+            accept: 'application/json',
+            'X-API-Key': API_KEY,
           },
         }
       );
       expect(result).toEqual(mockResponse.items);
     });
 
-    it("should throw an error on failed fetch", async () => {
+    it('should throw an error on failed fetch', async () => {
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: "Not Found",
-        text: jest.fn().mockResolvedValueOnce("Not found"),
+        statusText: 'Not Found',
+        text: jest.fn().mockResolvedValueOnce('Not found'),
       });
 
-      await expect(getIRTasks()).rejects.toThrow(
-        "Failed to fetch IR tasks: Not Found"
-      );
+      await expect(getIRTasks()).rejects.toThrow('Failed to fetch IR tasks: Not Found');
     });
   });
 
-  describe("uploadImage", () => {
-    it("should upload an image successfully", async () => {
-      const mockFile = new File(["image"], "test.jpg", { type: "image/jpeg" });
+  describe('uploadImage', () => {
+    it('should upload an image successfully', async () => {
+      const mockFile = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
       const mockResponse = {
-        image_id: "image-1",
-        status: "uploaded",
+        image_id: 'image-1',
+        status: 'uploaded',
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -143,14 +156,14 @@ describe("API Functions", () => {
         json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
-      const result = await uploadImage("task-1", mockFile);
+      const result = await uploadImage('task-1', mockFile);
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/image-recognition/tasks/task-1/images`,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "X-API-Key": API_KEY,
+            'X-API-Key': API_KEY,
           },
           body: expect.any(FormData),
         }
@@ -158,33 +171,31 @@ describe("API Functions", () => {
       expect(result).toEqual(mockResponse);
     });
 
-    it("should throw an error for invalid file", async () => {
-      await expect(uploadImage("task-1", null as any)).rejects.toThrow(
-        "Invalid file: File object is required"
+    it('should throw an error for invalid file', async () => {
+      await expect(uploadImage('task-1', null as any)).rejects.toThrow(
+        'Invalid file: File object is required'
       );
     });
 
-    it("should throw an error on failed upload", async () => {
-      const mockFile = new File(["image"], "test.jpg", { type: "image/jpeg" });
+    it('should throw an error on failed upload', async () => {
+      const mockFile = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
 
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 400,
-        statusText: "Bad Request",
-        text: jest.fn().mockResolvedValueOnce("Invalid image"),
+        statusText: 'Bad Request',
+        text: jest.fn().mockResolvedValueOnce('Invalid image'),
       });
 
-      await expect(uploadImage("task-1", mockFile)).rejects.toThrow(
-        "HTTP error! Status: 400"
-      );
+      await expect(uploadImage('task-1', mockFile)).rejects.toThrow('HTTP error! Status: 400');
     });
   });
 
-  describe("getTaskStatus", () => {
-    it("should fetch task status successfully", async () => {
+  describe('getTaskStatus', () => {
+    it('should fetch task status successfully', async () => {
       const mockResponse = {
-        image_id: "image-1",
-        status: "processed",
+        image_id: 'image-1',
+        status: 'processed',
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -192,37 +203,37 @@ describe("API Functions", () => {
         json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
-      const result = await getTaskStatus("task-1", "image-1");
+      const result = await getTaskStatus('task-1', 'image-1');
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/image-recognition/tasks/task-1/images/image-1`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            accept: "application/json",
-            "X-API-Key": API_KEY,
+            accept: 'application/json',
+            'X-API-Key': API_KEY,
           },
         }
       );
       expect(result).toEqual(mockResponse);
     });
 
-    it("should throw an error for invalid image_id", async () => {
-      await expect(getTaskStatus("task-1", "")).rejects.toThrow(
-        "Invalid image_id: cannot be undefined or empty"
+    it('should throw an error for invalid image_id', async () => {
+      await expect(getTaskStatus('task-1', '')).rejects.toThrow(
+        'Invalid image_id: cannot be undefined or empty'
       );
     });
 
-    it("should throw an error on failed fetch", async () => {
+    it('should throw an error on failed fetch', async () => {
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 500,
-        statusText: "Internal Server Error",
-        text: jest.fn().mockResolvedValueOnce("Server error"),
+        statusText: 'Internal Server Error',
+        text: jest.fn().mockResolvedValueOnce('Server error'),
       });
 
-      await expect(getTaskStatus("task-1", "image-1")).rejects.toThrow(
-        "HTTP error! Status: 500"
+      await expect(getTaskStatus('task-1', 'image-1')).rejects.toThrow(
+        'HTTP error! Status: 500'
       );
     });
   });

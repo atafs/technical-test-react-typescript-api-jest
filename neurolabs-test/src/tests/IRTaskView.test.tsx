@@ -1,4 +1,5 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 import IRTaskView from "../components/IRTaskView";
 import { getIRTasks, uploadImage } from "../services/ApiService";
 import { IRTask } from "../types";
@@ -43,26 +44,46 @@ jest.mock(
       )
 );
 
+// Mock useNavigate
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: () => mockNavigate,
+}));
+
 describe("IRTaskView", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockNavigate.mockClear();
   });
 
   it("renders loading state while fetching tasks", () => {
     (getIRTasks as jest.Mock).mockReturnValue(new Promise(() => {}));
 
-    render(<IRTaskView />);
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <IRTaskView />
+      </BrowserRouter>
+    );
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    const loadingElement = screen.getByTestId("loading-container");
+    expect(loadingElement).toHaveTextContent("Loading...");
+    expect(loadingElement).toHaveClass("p-4");
   });
 
   it("renders error message when fetch fails", async () => {
     (getIRTasks as jest.Mock).mockRejectedValue(new Error("Fetch error"));
 
-    render(<IRTaskView />);
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <IRTaskView />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
-      expect(screen.getByText("Failed to fetch tasks")).toBeInTheDocument();
+      const errorElement = screen.getByTestId("error-container");
+      expect(errorElement).toHaveTextContent("Failed to fetch tasks");
+      expect(errorElement).toHaveClass("text-red-500");
     });
   });
 
@@ -78,9 +99,13 @@ describe("IRTaskView", () => {
       },
     ];
     (getIRTasks as jest.Mock).mockResolvedValue(mockTasks);
-    (uploadImage as jest.Mock).mockResolvedValue(["img123"]);
+    (uploadImage as jest.Mock).mockResolvedValue({ image_id: "img123" });
 
-    render(<IRTaskView />);
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <IRTaskView />
+      </BrowserRouter>
+    );
 
     // Verify task is rendered
     await waitFor(() => {
@@ -96,9 +121,8 @@ describe("IRTaskView", () => {
 
     // Verify TaskStatusDisplay is rendered
     await waitFor(() => {
-      expect(screen.getByTestId("task-status-display")).toHaveTextContent(
-        "Status for task2/img123"
-      );
+      const statusDisplay = screen.getByTestId("task-status-display");
+      expect(statusDisplay).toHaveTextContent("Status for task2/img123");
     });
 
     // Simulate reset
@@ -107,9 +131,26 @@ describe("IRTaskView", () => {
 
     // Verify TaskStatusDisplay is removed
     await waitFor(() => {
-      expect(
-        screen.queryByTestId("task-status-display")
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("task-status-display")).not.toBeInTheDocument();
     });
+  });
+
+  it("navigates to home when back button is clicked", async () => {
+    (getIRTasks as jest.Mock).mockResolvedValue([]);
+
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <IRTaskView />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Image Recognition Tasks")).toBeInTheDocument();
+    });
+
+    const backButton = screen.getByText("Back");
+    fireEvent.click(backButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith("/");
   });
 });

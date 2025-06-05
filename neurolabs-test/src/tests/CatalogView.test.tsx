@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 import CatalogView from "../components/CatalogView";
 import { getCatalogItems } from "../services/ApiService";
 import { CatalogItem } from "../types";
@@ -31,7 +32,11 @@ describe("CatalogView", () => {
   it("renders loading spinner while fetching items", () => {
     (getCatalogItems as jest.Mock).mockReturnValue(new Promise(() => {}));
 
-    render(<CatalogView />);
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <CatalogView />
+      </BrowserRouter>
+    );
 
     expect(screen.getByTestId("loading-spinner")).toHaveTextContent(
       "Loading..."
@@ -41,7 +46,11 @@ describe("CatalogView", () => {
   it("renders error message when fetch fails", async () => {
     (getCatalogItems as jest.Mock).mockRejectedValue(new Error("Fetch error"));
 
-    render(<CatalogView />);
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <CatalogView />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId("error-message")).toHaveTextContent(
@@ -73,7 +82,11 @@ describe("CatalogView", () => {
     ];
     (getCatalogItems as jest.Mock).mockResolvedValue(mockItems);
 
-    render(<CatalogView />);
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <CatalogView />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       const itemCards = screen.getAllByTestId("catalog-item-card");

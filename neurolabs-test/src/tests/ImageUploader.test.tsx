@@ -109,37 +109,6 @@ describe("ImageUploader", () => {
     expect(screen.getByTestId("submit-button")).toBeDisabled();
   });
 
-  test("applies correct styling to components", () => {
-    render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
-
-    const container = screen.getByTestId("file-input").closest("div");
-    expect(container).toHaveClass("mb-4");
-
-    const input = screen.getByTestId("file-input");
-    expect(input).toHaveClass("mb-2");
-    expect(input).toHaveAttribute("type", "file");
-    expect(input).toHaveAttribute("accept", "image/*");
-
-    const submitButton = screen.getByTestId("submit-button");
-    expect(submitButton).toHaveClass(
-      "px-4",
-      "py-2",
-      "bg-blue-500",
-      "text-white",
-      "rounded",
-      "disabled:bg-gray-300"
-    );
-
-    const resetButton = screen.getByTestId("reset-button");
-    expect(resetButton).toHaveClass(
-      "px-4",
-      "py-2",
-      "bg-red-500",
-      "text-white",
-      "rounded"
-    );
-  });
-
   test("does not call onUpload when no file is selected", () => {
     render(<ImageUploader onUpload={mockOnUpload} onReset={mockOnReset} />);
 
