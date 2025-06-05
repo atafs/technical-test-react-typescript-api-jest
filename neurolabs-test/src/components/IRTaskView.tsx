@@ -17,7 +17,7 @@ const IRTaskView: React.FC<{}> = () => {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -54,7 +54,8 @@ const IRTaskView: React.FC<{}> = () => {
       });
       const response = await uploadImage(selectedTask, file);
       console.log("Upload response:", response);
-      const image_id = response.image_id;
+      const image_id =
+        Array.isArray(response) && response.length > 0 ? response[0] : null;
       if (!image_id) {
         setError("Upload response does not contain a valid image identifier");
         return;
@@ -74,8 +75,18 @@ const IRTaskView: React.FC<{}> = () => {
     setError(null);
   };
 
-if (loading) return <div data-testid="loading-container" className="p-4">Loading...</div>;
-if (error) return <div data-testid="error-container" className="p-4 text-red-500">{error}</div>;
+  if (loading)
+    return (
+      <div data-testid="loading-container" className="p-4">
+        Loading...
+      </div>
+    );
+  if (error)
+    return (
+      <div data-testid="error-container" className="p-4 text-red-500">
+        {error}
+      </div>
+    );
 
   return (
     <div className="p-4 border rounded">

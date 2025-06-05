@@ -34,7 +34,9 @@ export interface IRTask {
 
 export interface ImageSubmission {
   image_id: string;
+  task_uuid: string;
   status: string;
+  result: any | null;
 }
 
 export interface TaskStatus {
