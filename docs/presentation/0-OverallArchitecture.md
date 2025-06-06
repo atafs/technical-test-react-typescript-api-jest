@@ -1,173 +1,279 @@
-# RAG Chatbot Project
+# Frontend Engineer Technical Test - 2025
 
-## Project Overview
-This project is a real-time AI chatbot utilizing Retrieval-Augmented Generation (RAG) to answer questions based on user-uploaded documents (e.g., PDFs). The backend is built with Node.js, Express, and Socket.IO, while the frontend is a simple HTML client (`test-client.html`) for testing real-time communication. The system integrates a vector database (Pinecone) and a language model for document-based responses.
+## Background
+We have developed an Image Recognition API that our clients integrate with to recognize products in images. There are two key concepts: a **Catalog** of items and **Image Recognition (IR)** tasks.
 
-## Prerequisites
-- **Node.js** (v16 or higher) and **npm** installed.
-- **live-server** installed globally for running the client:
-  ```bash
-  npm install -g live-server
-  ```
-- A modern web browser (e.g., Chrome, Firefox).
-- API keys for:
-  - Pinecone: [Sign up](https://www.pinecone.io/)
-  - Hugging Face: [Sign up](https://huggingface.co/)
-  - xAI Grok API: [Get API key](https://x.ai/api)
+For this test, we have:
+- Created a test user account with a set of example Catalog items.
+- Created an IR task for detecting those items.
 
-## Project Structure
+View our [Staging API docs](https://staging.api.neurolabs.ai/) here. Using the API docs, you can authorize with your API key and test endpoints.
+
+> **Note**: We will give you an API key for a test user in our Staging environment. This will be revoked once you return your test. Please use it sensibly!
+
+## Task 1: Visualise the Catalog
+1. To view the available Catalog items:
+   - **GET** `/v2/catalog-items`
+2. Create an App to integrate with the API:
+   - Using **React** and **TypeScript**
+3. Query for the items in the Catalog
+4. Visualise the Catalog items:
+   - Including the **thumbnail**
+5. Highlight the Catalog item status:
+   - In particular, those that need **‘capture’**
+
+## Task 2: Submit IR Tasks
+1. To view the available IR tasks:
+   - **GET** `/v2/image-recognition/tasks`
+   - Find a task and copy the **uuid** (`task_uuid`)
+2. Add functionality to the App to submit images to the IR tasks
+3. Open an image to send:
+   - Show the image
+4. Submit the image to the endpoint:
+   - **POST** `/v2/image-recognition/tasks/{task_uuid}/images`
+   - Show the state of the request
+5. Add ability to send further requests to view the status of the original request:
+   - Show the output/result
+6. Include a few tests
+
+> **Note**: If there are CORS issues, one approach is to add `"proxy": "https://staging.api.neurolabs.ai/"` to the `package.json` and remove this base URL from any URLs.
+
+---
+
+# Frontend Technical Test Architecture
+
+## Overview
+This document outlines the architecture for the Frontend Engineer Technical Test application. The application integrates with the Staging API to visualize catalog items and submit image recognition (IR) tasks. The solution is built using **React** with **TypeScript**, styled with **Tailwind CSS**, and includes unit tests with **Jest** and **React Testing Library**. The application features a landing page with navigation to a Home screen, where all test-related functionality is centralized.
+
+## Objectives
+- **Visualize Catalog Items**: Display catalog items with thumbnails and highlight items needing 'capture' status.
+- **Submit IR Tasks**: Allow users to view IR tasks, upload images, submit them to a task, and check the status of submissions.
+- **Ensure Code Quality**: Use TypeScript for type safety, modular components, and include tests for critical functionality.
+- **Handle CORS**: Configure a proxy in `package.json` to resolve CORS issues with the Staging API.
+- **Provide a User-Friendly Entry Point**: Include a landing page with navigation to the main functionality.
+
+## Tech Stack
+- **Frontend Framework**: React 18 (with JSX)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS (via CDN for simplicity)
+- **HTTP Client**: Native Fetch API (for API requests)
+- **Routing**: React Router DOM
+- **Testing**: Jest, React Testing Library
+- **Build Tool**: Create React App (for development and bundling)
+- **API**: Staging API (`https://staging.api.neurolabs.ai/`)
+
+## System Architecture
+The application is a single-page application (SPA) with a modular component-based architecture, using **React Router** for navigation. It follows a clean architecture pattern with separation of concerns between UI components, API services, and state management. The entry point is a landing page (`/`) that navigates to the Home screen (`/home`), where all test functionality is centralized.
+
+### Components
+- **App**: Root component that sets up React Router with two routes:
+  - `/`: Landing page with a styled welcome message and a button to navigate to `/home`.
+  - `/home`: Renders the Home component, which contains all test-related components.
+- **Home**: Central component that integrates `CatalogView`, `IRTaskView`, and supporting components to fulfill test requirements.
+- **CatalogView**: Displays the list of catalog items with thumbnails and status indicators.
+- **IRTaskView**: Manages IR task selection, image upload, submission, and status display.
+- **CatalogItemCard**: Reusable component to render individual catalog item details.
+- **ImageUploader**: Handles image selection and preview.
+- **TaskStatusDisplay**: Shows the status and results of IR task submissions.
+- **LoadingSpinner**: Reusable component for loading states.
+- **ErrorMessage**: Reusable component for error states.
+
+### Services
+- **ApiService**: Encapsulates API calls to the Staging API using the Fetch API.
+  - `getCatalogItems`: Fetches catalog items (`GET /v2/catalog-items`).
+  - `getIRTasks`: Fetches available IR tasks (`GET /v2/image-recognition/tasks`).
+  - `submitImage`: Submits an image to an IR task (`POST /v2/image-recognition/tasks/{task_uuid}/images`).
+  - `getTaskStatus`: Polls the status of an IR task submission.
+- **Config**: Stores API key and base URL, loaded from environment variables.
+
+### State Management
+- **React Context**: Used for global state (e.g., API key, selected task UUID).
+- **React Hooks**:
+  - `useState`: Manages local component state (e.g., selected image, loading state).
+  - `useEffect`: Handles side effects like API calls and polling.
+  - `useQuery` (from `react-query`, optional): Manages API data fetching and caching (if added for optimization).
+
+### Data Flow
+- **Landing Page**:
+  - The `App` component renders a landing page at `/` with a button to navigate to `/home`.
+  - Navigation uses `react-router-dom` to load the `Home` component.
+- **Catalog Visualization** (in `Home`):
+  - `CatalogView` triggers `ApiService.getCatalogItems` on mount.
+  - Response data is stored in the component state.
+  - `CatalogItemCard` components render each item, with conditional styling for 'capture' status.
+- **IR Task Submission** (in `Home`):
+  - `IRTaskView` fetches tasks via `ApiService.getIRTasks`.
+  - User selects a task UUID and uploads an image via `ImageUploader`.
+  - `ApiService.submitImage` sends the image to the API.
+  - `TaskStatusDisplay` polls `ApiService.getTaskStatus` to show results.
+- **Error Handling**:
+  - API errors are caught and displayed using `ErrorMessage`.
+  - Network failures trigger retry logic (limited to 3 attempts).
+
+## File Structure
 ```
-rag-chatbot/
-├── node_modules/           # Project dependencies
-├── public/                 # Static files for client
-│   └── test-client.html    # HTML client for testing Socket.IO
-├── server.js               # Node.js/Express/Socket.IO backend
-├── package.json            # Project dependencies and scripts
-└── README.md               # This file
+neurolabs-test/
+├── src/
+│   ├── components/
+│   │   ├── CatalogItemCard.tsx
+│   │   ├── CatalogView.tsx
+│   │   ├── Home.tsx
+│   │   ├── ImageUploader.tsx
+│   │   ├── IRTaskView.tsx
+│   │   ├── LoadingSpinner.tsx
+│   │   ├── ErrorMessage.tsx
+│   │   └── TaskStatusDisplay.tsx
+│   ├── services/
+│   │   ├── ApiService.ts
+│   │   └── Config.ts
+│   ├── context/
+│   │   └── AppContext.tsx
+│   ├── types/
+│   │   └── index.ts
+│   ├── App.tsx
+│   ├── index.tsx
+│   ├── index.css
+│   └── reportWebVitals.ts
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-## Setup Instructions
+## API Integration
+- **Base URL**: `https://staging.api.neurolabs.ai/`
+- **Authentication**: API key passed via `Authorization: Bearer` header.
+- **CORS Handling**: Proxy set in `package.json` (`"proxy": "https://staging.api.neurolabs.ai/"`).
+- **HTTP Client**: Fetch API is used for all requests, with `FormData` for image uploads and JSON parsing for responses.
 
-### 1. Clone or Set Up the Project
-Clone the repository (or download and extract the source code):
-```bash
-git clone <repository-url>
-cd rag-chatbot
-```
-Alternatively, create the project directory and place `server.js` and `public/test-client.html` in it.
-
-### 2. Install Backend Dependencies
-Install the required Node.js dependencies:
-```bash
-npm install
-```
-This installs:
-- `express`
-- `socket.io`
-- `pdf-parse`
-- `@pinecone-database/pinecone`
-- `axios`
-
-### 3. Configure Environment Variables
-Create a `.env` file in the project root and add your API keys:
-```env
-PINECONE_API_KEY=your_pinecone_api_key
-HUGGINGFACE_API_KEY=your_huggingface_api_key
-GROK_API_KEY=your_xai_grok_api_key
-```
-**Note**: Add `.env` to `.gitignore` to avoid exposing API keys.
-
-### 4. Run the Server
-Start the Node.js/Express server:
-```bash
-npm start
-```
-The server runs on `http://localhost:3000` by default, handling HTTP requests and Socket.IO connections. Verify it’s running by checking the console for:
-```
-Server on http://localhost:3000
-```
-
-### 5. Run the Client
-Run the client using `live-server` to serve `test-client.html`:
-```bash
-live-server --open=public/test-client.html
-```
-This command:
-- Starts a local development server (typically on `http://localhost:8080`).
-- Automatically opens `public/test-client.html` in your default browser.
-- Enables live reloading for client-side changes.
-
-**Note**: Ensure the backend server is running on `http://localhost:3000` before starting the client, as `test-client.html` connects to it via Socket.IO.
-
-### 6. Using the Client
-- **Access the Chat Interface**: The browser opens `test-client.html`, displaying a basic chat UI.
-- **Upload Documents**: Use the file input to upload PDFs. The backend processes the file and stores embeddings in Pinecone.
-- **Send Messages**: Type questions in the input field. The backend retrieves relevant document chunks via Pinecone and responds using the Grok API.
-- **Real-Time Interaction**: Socket.IO ensures messages are updated instantly in the UI.
-
-## Example `test-client.html`
-Ensure `public/test-client.html` exists with the following structure:
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RAG Chatbot Test Client</title>
-  <style>
-    .chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
-    .user { color: blue; }
-    .bot { color: green; }
-  </style>
-</head>
-<body>
-  <h1>RAG Chatbot Test Client</h1>
-  <input type="file" id="fileInput" accept=".pdf" />
-  <button onclick="uploadFile()">Upload PDF</button>
-  <div class="chat" id="chat"></div>
-  <input type="text" id="message" placeholder="Ask a question" />
-  <button onclick="sendMessage()">Send</button>
-  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io('http://localhost:3000');
-    const chat = document.getElementById('chat');
-    const messageInput = document.getElementById('message');
-
-    socket.on('response', (response) => {
-      const p = document.createElement('p');
-      p.className = 'bot';
-      p.textContent = response;
-      chat.appendChild(p);
-      chat.scrollTop = chat.scrollHeight;
-    });
-
-    function sendMessage() {
-      const message = messageInput.value.trim();
-      if (message) {
-        const p = document.createElement('p');
-        p.className = 'user';
-        p.textContent = message;
-        chat.appendChild(p);
-        socket.emit('chat', message);
-        messageInput.value = '';
-        chat.scrollTop = chat.scrollHeight;
+### Endpoints and 200 OK Response Structures
+#### GET /v2/catalog-items
+- **Purpose**: Fetches the list of catalog items.
+- **Response (200 OK)**:
+```json
+[
+  {
+    "id": "string",
+    "name": "string",
+    "thumbnail": "string",
+    "status": "string",
+    "description": "string",
+    "category": "string",
+    "created_at": "string",
+    "updated_at": "string",
+    "metadata": {
+      "sku": "string",
+      "brand": "string",
+      "weight": number,
+      "dimensions": {
+        "width": number,
+        "height": number,
+        "depth": number
       }
-    }
-
-    async function uploadFile() {
-      const fileInput = document.getElementById('fileInput');
-      const file = fileInput.files[0];
-      if (file) {
-        const formData = new FormData();
-        formData.append('pdf', file);
-        await fetch('http://localhost:3000/upload', {
-          method: 'POST',
-          body: formData
-        });
-        alert('File uploaded');
-      }
-    }
-  </script>
-</body>
-</html>
+    },
+    "image_count": number
+  },
+  ...
+]
 ```
+- **Notes**: The response is an array of catalog items. Required fields are `id`, `name`, `thumbnail`, and `status`, used for visualization and status highlighting (e.g., 'capture'). Optional fields (`description`, `category`, `created_at`, `updated_at`, `metadata`, `image_count`) provide additional context for display or filtering. The `thumbnail` URL is assumed to be publicly accessible. The `status` field drives conditional styling in `CatalogItemCard`.
 
-## Troubleshooting
-- **Server Not Running**: Ensure `npm start` is active and `http://localhost:3000` is accessible.
-- **Client Not Connecting**: Verify `test-client.html` references the correct Socket.IO URL (`http://localhost:3000/socket.io/socket.io.js`).
-- **live-server Issues**: Confirm `live-server` is installed globally and the `public` directory contains `test-client.html`.
-- **API Key Errors**: Check `.env` for valid Pinecone, Hugging Face, and Grok API keys.
-- **Port Conflicts**: If port 3000 (backend) or 8080 (live-server) is in use, update `server.js` or use `live-server --port=NEW_PORT`.
+#### GET /v2/image-recognition/tasks
+- **Purpose**: Fetches the list of available IR tasks.
+- **Response (200 OK)**:
+```json
+[
+  {
+    "uuid": "string",
+    "name": "string"
+  },
+  ...
+]
+```
+- **Notes**: The response is an array of IR tasks. The `uuid` is used for submitting images to a specific task.
 
-## Notes
-- The backend (`server.js`) handles PDF parsing, embedding storage in Pinecone, and LLM queries via the Grok API.
-- `test-client.html` is a lightweight client for testing Socket.IO and file uploads. For production, consider a React frontend.
-- Ensure Pinecone and API services are active before running the application.
+#### POST /v2/image-recognition/tasks/{task_uuid}/images
+- **Purpose**: Submits an image to the specified IR task.
+- **Request Body**: `FormData` containing the image file (key: `image`).
+- **Response (200 OK)**:
+```json
+{
+  "image_id": "string",
+  "task_uuid": "string",
+  "status": "string"
+}
+```
+- **Notes**: The `image_id` is used to poll for the submission status. The `status` field indicates the processing state.
 
-## Resources
-- [Express Documentation](https://expressjs.com/)
-- [Socket.IO Documentation](https://socket.io/docs/v4/)
-- [live-server Documentation](https://www.npmjs.com/package/live-server)
-- [Pinecone Documentation](https://docs.pinecone.io/)
-- [Hugging Face API](https://huggingface.co/docs/api-inference)
-- [xAI Grok API](https://x.ai/api)
+#### GET /v2/image-recognition/tasks/{task_uuid}/images/{image_id} (Assumed)
+- **Purpose**: Retrieves the status and results of an image submission.
+- **Response (200 OK)**:
+```json
+{
+  "image_id": "string",
+  "task_uuid": "string",
+  "status": "string",
+  "result": {
+    "recognized_items": [
+      {
+        "item_id": "string",
+        "confidence": number
+      },
+      ...
+    ]
+  }
+}
+```
+- **Notes**: This endpoint is assumed based on standard REST patterns for polling task status. The `result` field is included only when the `status` is "completed".
+
+## Styling
+- **Tailwind CSS**: Used for responsive, utility-first styling.
+- **Layout**: Flexbox and Grid for catalog and task views within the `Home` component.
+- **Theming**: Consistent colors and typography (e.g., blue for active states, red for errors).
+- **Landing Page**: Gradient background with animated fade-in text and a styled button, as defined in `App.tsx`.
+
+## Testing
+### Unit Tests
+- **CatalogView**: Renders catalog items correctly, including optional fields like `description` and `category`.
+- **ImageUploader**: Handles file selection and preview.
+- **ApiService**: Mocks Fetch API calls to ensure correct request/response handling.
+- **Home**: Verifies rendering of child components (`CatalogView`, `IRTaskView`).
+- **App**: Tests routing to landing page and Home screen.
+- **Tools**: Jest, React Testing Library (included with Create React App).
+- **Coverage**: Focus on critical components and services.
+
+## Deployment
+- **Development**: Run locally with `npm start` (Create React App).
+- **Build**: `npm run build` generates a production-ready bundle.
+- **Dependencies**: Managed via `npm`, listed in `package.json`.
+
+## Assumptions
+- API key is provided and stored in `.env` as `REACT_APP_API_KEY`.
+- IR task status endpoint is assumed based on standard REST patterns.
+- Thumbnail URLs in catalog items are accessible without additional authentication.
+- Image uploads are handled as `multipart/form-data` via Fetch API.
+- The `Home` component is responsible for orchestrating all test-related functionality.
+- The `GET /v2/catalog-items` response structure is inferred from the test description and typical REST API conventions for catalog management in image recognition systems, as the exact schema was not provided.
+- Optional fields in the `GET /v2/catalog-items` response (`description`, `category`, `created_at`, `updated_at`, `metadata`, `image_count`) may be null or omitted if not applicable.
+
+## Risks and Mitigations
+- **CORS Issues**: Mitigated by proxy configuration.
+- **API Rate Limits**: Handle with retry logic and exponential backoff.
+- **Type Safety**: Use TypeScript interfaces for API responses, aligned with documented response structures, with optional fields to handle variability.
+- **Scalability**: Modular components and services allow easy extension.
+- **Routing Performance**: React Router is lightweight, but lazy loading could be added for larger apps.
+- **API Schema Changes**: TypeScript interfaces can be updated if actual response structures differ from assumed properties.
+
+## Future Improvements
+- Add `react-query` for advanced data fetching and caching.
+- Implement pagination for large catalog lists.
+- Add accessibility (ARIA) attributes for better usability.
+- Enhance tests with end-to-end testing (e.g., Cypress).
+- Introduce lazy loading for routes to optimize performance.
+- Display additional catalog item properties (e.g., `description`, `category`) in `CatalogItemCard` for richer visualization.
